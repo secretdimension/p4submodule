@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "p4-git-submodule"
+version = "0.1.0"
+description = "A tool for managing git repositories inside of Perforce depots"
+authors = ["Colden Cullen <ccullen@secretdimension.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+p4python = "^2024.1.2645203"
+pygit2 = "^1.15.1"
+click = "^8.1.7"
+
+[tool.poetry.group.dev.dependencies]
+types-pygit2 = "^1.15.0.20240822"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

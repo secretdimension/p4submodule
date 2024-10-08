@@ -1,4 +1,0 @@
-cffi==1.17.1
-p4python==2024.1.2645203
-pycparser==2.22
-pygit2==1.15.1

@@ -1,0 +1,9 @@
+name = "Root"
+remote = "https://github.com/SecretDimension/p4-git-submodule"
+tracking = "main"
+
+[submodule.A]
+#path = "."
+remote = "https://github.com/SecretDimension/p4-git-submodule"
+tracking = "main"
+current_ref = "b287e5d93de241c7e439e8742fe4555d24d728bd"

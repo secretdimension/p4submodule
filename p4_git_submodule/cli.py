@@ -1,44 +1,36 @@
 import click
-import os
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
 from .config_file import ConfigFile
 
+def config_argument(*param_decls: str):
+    return click.argument(
+        *param_decls,
+        type=ConfigFile,
+        required=False,
+        default='.',
+    )
+
 @click.group()
 def main():
     pass
 
 @main.command()
-@click.argument('config_path', type=Path, required=False)
-def dump_config(config_path: Optional[Path]):
-    cwd = Path(os.getcwd())
-    if not config_path:
-        config_path = cwd
-    if not config_path or not config_path.is_absolute():
-        config_path = cwd / config_path
-
-    config = ConfigFile(config_path)
+@config_argument('config')
+def dump_config(config: ConfigFile):
     for module in config.submodules:
         print(f'{module}: {vars(module)}')
 
 @main.command()
-@click.argument('config_path', type=Path, required=False)
+@config_argument('config')
 @click.option('--root', type=bool, is_flag=True)
 @click.option('--name', type=str, prompt=True)
 @click.option('--remote', type=urlparse, prompt=True)
 @click.option('--tracking', type=str, prompt=True)
 @click.option('--path', type=Path)
-def create(config_path: Optional[Path], root: bool, name: str, remote: str, tracking: str, path: Path):
-    cwd = Path(os.getcwd())
-    if not config_path:
-        config_path = cwd
-    if not config_path or not config_path.is_absolute():
-        config_path = cwd / config_path
-
-    config = ConfigFile(config_path)
-
+def create(config: ConfigFile, root: bool, name: str, remote: str, tracking: str, path: Path):
     new = config.add_submodule(name, root)
     new.remote = remote
     new.tracking = tracking

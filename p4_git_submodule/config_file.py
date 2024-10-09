@@ -1,3 +1,4 @@
+import os
 import tomlkit.api
 from pathlib import Path
 from tomlkit.toml_document import TOMLDocument
@@ -19,6 +20,12 @@ class ConfigFile(TOMLFile):
     _document: TOMLDocument
 
     def __init__(self, path: Path) -> None:
+        if not isinstance(path, Path):
+            path = Path(path)
+
+        if not path.is_absolute():
+            path = Path(os.getcwd()) / path
+
         # If the filepath is a directory, use the default config file name
         if path.is_dir():
             path /= ConfigFile.CONFIG_FILE

@@ -4,7 +4,7 @@ from tomlkit.toml_document import TOMLDocument
 from tomlkit.toml_file import TOMLFile
 from typing import Any
 
-from p4_git_submodule.submodule import Submodule
+from .submodule import Submodule
 
 class ConfigFile(TOMLFile):
     """

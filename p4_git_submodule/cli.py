@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from p4_git_submodule.config_file import ConfigFile
-from p4_git_submodule.submodule import Submodule
+from .config_file import ConfigFile
 
 @click.group()
 def main():

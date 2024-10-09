@@ -1,13 +1,32 @@
 from __future__ import annotations
+from collections.abc import Callable
 
-import tomllib
-from pathlib import Path, PurePath
-from typing import Any, Optional
+import tomlkit
+import tomlkit.api
+import tomlkit.exceptions
+from pathlib import Path
+from typing import Any, Optional, T
 from urllib.parse import urlparse, urlunparse, ParseResult
 
 from pygit2 import Oid
 
 URL = ParseResult
+
+def _toml_property(key: str, reader: Callable[[str], T] = lambda x: x, writer: Callable[[T], str] = lambda x: x) -> property:
+    """Helper for generating properties accessing a toml table"""
+    def _get(self: Submodule):
+        try:
+            return reader(self._table[key])
+        except tomlkit.exceptions.NonExistentKey:
+            return None
+
+    def _set(self, new):
+        self._table[key] = writer(new)
+
+    def _del(self):
+        return self._table.__delitem__(key)
+
+    return property(_get, _set, _del)
 
 class Submodule(object):
     CONFIG_FILE = "submodule.toml"
@@ -18,53 +37,40 @@ class Submodule(object):
     source_file: Path
     """The path to the config file this submodule came from"""
 
+    _table: tomlkit.api.Table
+
     # The below come from the config
 
-    path: Path
-    """The path to the repo (relative to the file) (defaults to file directory)"""
+    path: Path = _toml_property('path', Path, str)
+    """The path to the repo (relative to the file) (MAY BE NONE, see full_path)"""
 
-    remote: URL
+    remote: URL = _toml_property('remote', urlparse, urlunparse)
     """The remote URL to sync with"""
 
-    tracking: str
+    tracking: str = _toml_property('tracking')
     """The remote ref to track when syncing"""
 
-    current_ref: Optional[Oid]
+    current_ref: Optional[Oid] = _toml_property('current_ref', lambda str: Oid(hex=str), lambda oid: oid.raw.hex())
     """The currently synced revision"""
 
-    def __init__(self, name: str, source_file: Path, config: dict[str, Any]) -> None:
+    def __init__(self, name: str, source_file: Path, config: tomlkit.api.Table) -> None:
         self.name = name
         self.source_file = source_file
+        self._table = config
 
-        self.path = (source_file.parent / config.get('path', '.')).resolve()
-
-        if not self.path.is_relative_to(source_file.parent):
+        if self.path and not self.path.is_relative_to(source_file.parent):
             raise ValueError(f"Submodule {name}'s path ('{config['path']}') must be relative to the file path '{source_file.parent}'")
 
-        self.remote = urlparse(config['remote'])
-        self.tracking = config['tracking']
-        if ref_str := config.get('current_ref'):
-            self.current_ref = Oid(hex=ref_str)
-        else:
-            self.current_ref = None
+    @property
+    def full_path(self) -> Path:
+        return (self.source_file.parent / (self.path or '.')).resolve()
+
+    @full_path.setter
+    def set_full_path(self, path: Path):
+        self.path = path.relative_to(self.source_file.parent)
 
     def __repr__(self) -> str:
-        return f'<Submodule {self.name}>'
-
-    def to_dict(self) -> dict[str, Any]:
-        props = {
-            "remote": urlunparse(self.remote),
-            "tracking": self.tracking,
-        }
-
-        relative_path = self.path.relative_to(self.source_file.parent)
-        if len(relative_path.parts) > 0:
-            props["path"] = relative_path.as_posix()
-
-        if self.current_ref:
-            props["current_ref"] = self.current_ref.raw.hex()
-
-        return props
+        return f'Submodule(name={self.name})'
 
     @classmethod
     def from_file(cls, file: Path) -> list[Submodule]:
@@ -77,7 +83,7 @@ class Submodule(object):
             file /= cls.CONFIG_FILE
 
         with file.open('rb') as fp:
-            config = tomllib.load(fp)
+            config = tomlkit.load(fp)
 
         # The list to return
         submodules: list[Submodule] = []
@@ -92,3 +98,5 @@ class Submodule(object):
             submodules.insert(0, cls(name, file, config))
 
         return submodules
+
+

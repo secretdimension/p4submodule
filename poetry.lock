@@ -197,6 +197,17 @@ files = [
 cffi = ">=1.16.0"
 
 [[package]]
+name = "tomlkit"
+version = "0.13.2"
+description = "Style preserving TOML library"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde"},
+    {file = "tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79"},
+]
+
+[[package]]
 name = "types-cffi"
 version = "1.16.0.20240331"
 description = "Typing stubs for cffi"
@@ -238,4 +249,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ea78cf777dffb4388201447090f4c93ad764801c1a411253f9904794b39ef300"
+content-hash = "c866b53ad9d1cedbbe8bdc9338632bea7d7d4f19188c145dddd164a4c4709bf3"

@@ -10,10 +10,6 @@ def main():
     pass
 
 @main.command()
-def testing():
-    print("Testing!")
-
-@main.command()
 @click.argument('path', type=Path, required=False)
 def dump_config(path: Optional[Path]):
     cwd = Path(os.getcwd())
@@ -23,4 +19,3 @@ def dump_config(path: Optional[Path]):
         path = cwd / path
     for module in Submodule.from_file(path):
         print(vars(module))
-        print(module.to_dict())

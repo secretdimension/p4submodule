@@ -146,13 +146,18 @@ class Submodule(object):
         if self._repo.status():
             raise Exception("Unstaged changes locally, unsupported!")
 
+        ahead, behind = self._repo.ahead_behind(tracking_branch.target, remote_tracking.target)
         merge_analysis, _ = self._repo.merge_analysis(remote_tracking.target)
 
         if merge_analysis & MergeAnalysis.UP_TO_DATE:
+            assert(ahead == 0)
+
             print("Up to date!")
             return
 
         elif merge_analysis & MergeAnalysis.FASTFORWARD:
+            assert(ahead == 0)
+
             # Point the tracking branch at the remote branch
             tracking_branch.set_target(remote_tracking.target)
             # Update the index
@@ -160,9 +165,12 @@ class Submodule(object):
             # Update the working tree
             self._repo.reset(tracking_branch.target, ResetMode.HARD)
 
-            print(f"Fast-forward updated to {tracking_branch.upstream_name} ({remote_tracking.target})")
+            print(f"Fast-forward updated {behind} commits to {tracking_branch.upstream_name} ({remote_tracking.target})")
 
         elif merge_analysis & MergeAnalysis.NORMAL:
+            assert(ahead > 0)
+
+            print("Local branch is {ahead} commits ahead of remote, {behind} commits behind remote")
             raise Exception("Merge commit is required, unsupported")
 
         elif merge_analysis & MergeAnalysis.NONE:

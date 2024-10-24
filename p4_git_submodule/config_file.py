@@ -43,12 +43,12 @@ class ConfigFile(TOMLFile):
         submodules: list[Submodule] = []
 
         for name, child in self._document.get('submodule', dict()).items():
-            submodules.append(Submodule(name, self.path, child))
+            submodules.append(Submodule(name, self.path.parent, child))
 
         # Create a submodule from root-level settings
         if len(self._document) > 0:
             name = self._document.get('name', self.path.parent.name)
-            submodules.insert(0, Submodule(name, self.path, self._document))
+            submodules.insert(0, Submodule(name, self.path.parent, self._document))
 
         return submodules
 

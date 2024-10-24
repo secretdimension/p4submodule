@@ -131,15 +131,14 @@ class Submodule(object):
     def update(self) -> None:
         if not self._repo:
             raise Exception("Cannot update submodule which has not been cloned!")
-
         if not self.current_ref:
             raise Exception("Repo is missing current_ref, cannot update!")
 
-        # Fetch latest changes
-        self._repo.remotes['origin'].fetch(callbacks=MyRemoteCallbacks())
-
-        # Get the branch references
         tracking_branch = self._repo.lookup_branch(self.tracking)
+
+        # Fetch latest changes
+        self._repo.remotes[tracking_branch.upstream.remote_name].fetch(callbacks=MyRemoteCallbacks())
+
         remote_tracking = self._repo.lookup_reference(tracking_branch.upstream_name)
 
         # Check for uncommitted changes

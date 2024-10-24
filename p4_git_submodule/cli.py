@@ -58,14 +58,13 @@ def dump_config(config: ConfigFile):
 
 @main.command()
 @config_argument('config')
-@click.option('--root', type=bool, is_flag=True)
 @click.option('--name', type=str)
 @click.option('--remote', type=str, prompt=True)
 @click.option('--tracking', type=str)
 @click.option('--path', type=Path)
 @click.option('--no-sync', type=bool, is_flag=True)
-def create(config: ConfigFile, root: bool, name: Optional[str], remote: str, tracking: Optional[str], path: Optional[Path], no_sync: bool):
-    new = config.add_submodule(name or config.path.parent.name, root)
+def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optional[str], path: Optional[Path], no_sync: bool):
+    new = config.add_submodule(name, name is None)
 
     if match := GIT_SSH_REGEX.match(remote):
         remote = "ssh://{}@{}/{}".format(*match.groups())

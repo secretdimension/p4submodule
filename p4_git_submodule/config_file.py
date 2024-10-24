@@ -2,7 +2,7 @@ import tomlkit.api
 from pathlib import Path
 from tomlkit.toml_document import TOMLDocument
 from tomlkit.toml_file import TOMLFile
-from typing import Any
+from typing import Optional
 
 from .submodule import Submodule
 
@@ -52,12 +52,16 @@ class ConfigFile(TOMLFile):
 
         return submodules
 
-    def add_submodule(self, name: str, is_root: bool = False) -> Submodule:
+    def add_submodule(self, name: Optional[str], is_root: bool = False) -> Submodule:
         """Create a new submodule and add it to the file"""
         if is_root:
             new_table = tomlkit.api.Table(self._document, tomlkit.api.Trivia(), False)
-            new_table.add('name', name)
+            if name:
+                new_table.add('name', name)
         else:
+            if not name:
+                raise ValueError('If is_root is false, a name is required')
+
             submodule_table = self._document.setdefault('submodule', tomlkit.api.table(True))
             new_table = tomlkit.api.table()
             submodule_table.add(name, new_table)

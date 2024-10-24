@@ -142,6 +142,10 @@ class Submodule(object):
         tracking_branch = self._repo.lookup_branch(self.tracking)
         remote_tracking = self._repo.lookup_reference(tracking_branch.upstream_name)
 
+        # Check for uncommitted changes
+        if self._repo.status():
+            raise Exception("Unstaged changes locally, unsupported!")
+
         merge_analysis, _ = self._repo.merge_analysis(remote_tracking.target)
 
         if merge_analysis & MergeAnalysis.UP_TO_DATE:

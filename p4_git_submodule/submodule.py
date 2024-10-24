@@ -169,7 +169,7 @@ class Submodule(object):
         elif merge_analysis & MergeAnalysis.NORMAL:
             assert(ahead > 0)
 
-            print("Local branch is {ahead} commits ahead of remote, {behind} commits behind remote")
+            print(f"Local branch is {ahead} commits ahead of remote, {behind} commits behind remote")
             raise Exception("Merge commit is required, unsupported")
 
         elif merge_analysis & MergeAnalysis.NONE:

@@ -10,6 +10,7 @@ import pygit2
 import tomlkit.api
 import tomlkit.exceptions
 from paramiko.config import SSHConfig
+from pygit2.enums import MergeAnalysis, ResetMode
 
 URL = ParseResult
 
@@ -65,6 +66,9 @@ class Submodule(object):
     _table: tomlkit.api.Table
     """The table describing the configuration of the submodule"""
 
+    _repo: Optional[pygit2.Repository]
+    """The git repository for the submodule (if it exists)"""
+
     # The below come from the config
 
     path: Path = _toml_property('path', Path, str)
@@ -84,6 +88,11 @@ class Submodule(object):
         self._config_dir = config_dir
         self._table = config
 
+        if path := pygit2.discover_repository(self.full_path):
+            self._repo = pygit2.Repository(path)
+        else:
+            self._repo = None
+
     @property
     def full_path(self) -> Path:
         return (self._config_dir / (self.path or '.')).resolve()
@@ -100,10 +109,10 @@ class Submodule(object):
 
     def clone(self) -> pygit2.Repository:
         """Clone the submodule into the relevant directory (directory _cannot_ already exist)"""
-        if pygit2.discover_repository(self.full_path):
+        if self._repo:
             raise Exception("Cannot clone() submodule that is already cloned!")
 
-        repo = pygit2.clone_repository(
+        self._repo = pygit2.clone_repository(
             self.remote.geturl(),
             self.full_path,
             checkout_branch=self.tracking,
@@ -112,8 +121,49 @@ class Submodule(object):
 
         # If user didn't specify a tracking branch, populate it from the default cloned
         if not self.tracking:
-            self.tracking = repo.head.shorthand
+            self.tracking = self._repo.head.shorthand
 
-        self.current_ref = repo.head.resolve().target
+        self.current_ref = self._repo.head.resolve().target
 
-        return repo
+        return self._repo
+
+
+    def update(self) -> None:
+        if not self._repo:
+            raise Exception("Cannot update submodule which has not been cloned!")
+
+        if not self.current_ref:
+            raise Exception("Repo is missing current_ref, cannot update!")
+
+        # Fetch latest changes
+        self._repo.remotes['origin'].fetch(callbacks=MyRemoteCallbacks())
+
+        # Get the branch references
+        tracking_branch = self._repo.lookup_branch(self.tracking)
+        remote_tracking = self._repo.lookup_reference(tracking_branch.upstream_name)
+
+        merge_analysis, _ = self._repo.merge_analysis(remote_tracking.target)
+
+        if merge_analysis & MergeAnalysis.UP_TO_DATE:
+            print("Up to date!")
+            return
+
+        elif merge_analysis & MergeAnalysis.FASTFORWARD:
+            # Point the tracking branch at the remote branch
+            tracking_branch.set_target(remote_tracking.target)
+            # Update the index
+            self._repo.checkout(tracking_branch)
+            # Update the working tree
+            self._repo.reset(tracking_branch.target, ResetMode.HARD)
+
+            print(f"Fast-forward updated to {tracking_branch.upstream_name} ({remote_tracking.target})")
+
+        elif merge_analysis & MergeAnalysis.NORMAL:
+            raise Exception("Merge commit is required, unsupported")
+
+        elif merge_analysis & MergeAnalysis.NONE:
+            raise Exception("No merge possible!")
+
+        # Update the current_ref and save it
+        self.current_ref = self._repo.head.resolve().target
+

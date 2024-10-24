@@ -62,3 +62,10 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
         new.clone()
 
     config.save()
+
+@main.command()
+@config_argument('config')
+def update(config: ConfigFile):
+    for module in config.submodules:
+        module.update()
+    config.save()

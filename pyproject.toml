@@ -12,6 +12,7 @@ p4python = "^2024.1.2645203"
 pygit2 = "^1.15.1"
 click = "^8.1.7"
 tomlkit = "^0.13.2"
+paramiko = "^3.5.0"
 
 [tool.poetry.group.dev.dependencies]
 types-pygit2 = "^1.15.0.20240822"

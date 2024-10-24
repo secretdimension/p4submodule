@@ -1,14 +1,39 @@
 from __future__ import annotations
 
-import tomlkit.api
-import tomlkit.exceptions
 from collections.abc import Callable
+from os.path import expanduser
 from pathlib import Path
-from pygit2 import Oid
-from typing import Any, Optional, T
+from typing import Optional, T
 from urllib.parse import urlparse, urlunparse, ParseResult
 
+import pygit2
+import tomlkit.api
+import tomlkit.exceptions
+from paramiko.config import SSHConfig
+
 URL = ParseResult
+
+class MyRemoteCallbacks(pygit2.RemoteCallbacks):
+
+    def credentials(self, url_str, username_from_url, allowed_types):
+        url = urlparse(url_str)
+
+        if allowed_types & pygit2.enums.CredentialType.USERNAME:
+            return pygit2.Username(username_from_url)
+
+        elif allowed_types & pygit2.enums.CredentialType.SSH_KEY:
+            ssh_config_path = Path(expanduser('~/.ssh/config'))
+            if not ssh_config_path.exists():
+                config = SSHConfig.from_path(ssh_config_path)
+                if url_config := config.lookup(url.hostname):
+                    if privkey := url_config.get('identityfile'):
+                        return pygit2.Keypair(username_from_url, expanduser(privkey) + ".pub", expanduser(privkey), "")
+
+            # Attempt default ssh keys
+            return pygit2.Keypair(username_from_url, expanduser("~/.ssh/id_rsa.pub"), expanduser("~/.ssh/id_rsa"), "")
+
+        else:
+            return None
 
 def _toml_property(key: str, reader: Callable[[str], T] = lambda x: x, writer: Callable[[T], str] = lambda x: x) -> property:
     """Helper for generating properties accessing a toml table"""
@@ -51,7 +76,7 @@ class Submodule(object):
     tracking: str = _toml_property('tracking')
     """The remote ref to track when syncing"""
 
-    current_ref: Optional[Oid] = _toml_property('current_ref', lambda str: Oid(hex=str), lambda oid: oid.raw.hex())
+    current_ref: Optional[pygit2.Oid] = _toml_property('current_ref', lambda str: pygit2.Oid(hex=str), lambda oid: oid.raw.hex())
     """The currently synced revision"""
 
     def __init__(self, name: str, config_dir: Path, config: tomlkit.api.Table) -> None:
@@ -70,3 +95,25 @@ class Submodule(object):
     def __repr__(self) -> str:
         return f'Submodule(name="{self.name}" path="{self.full_path}")'
 
+
+    # Functionality
+
+    def clone(self) -> pygit2.Repository:
+        """Clone the submodule into the relevant directory (directory _cannot_ already exist)"""
+        if pygit2.discover_repository(self.full_path):
+            raise Exception("Cannot clone() submodule that is already cloned!")
+
+        repo = pygit2.clone_repository(
+            self.remote.geturl(),
+            self.full_path,
+            checkout_branch=self.tracking,
+            # depth=1, # NOTE: This breaks everything
+            callbacks=MyRemoteCallbacks())
+
+        # If user didn't specify a tracking branch, populate it from the default cloned
+        if not self.tracking:
+            self.tracking = repo.head.shorthand
+
+        self.current_ref = repo.head.resolve().target
+
+        return repo

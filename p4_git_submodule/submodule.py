@@ -128,7 +128,7 @@ class Submodule(object):
         return self._repo
 
 
-    def update(self) -> None:
+    def update(self, commit_message: Optional[str] = None) -> None:
         if not self._repo:
             raise Exception("Cannot update submodule which has not been cloned!")
         if not self.current_ref:
@@ -143,7 +143,22 @@ class Submodule(object):
 
         # Check for uncommitted changes
         if self._repo.status():
-            raise Exception("Unstaged changes locally, unsupported!")
+            if not commit_message:
+                raise Exception("Unstaged changes, but commit message not provided!")
+
+            self._repo.index.add_all()
+            self._repo.index.write()
+
+            self._repo.create_commit(
+                tracking_branch.name,
+                self._repo.default_signature,
+                self._repo.default_signature,
+                commit_message,
+                self._repo.index.write_tree(),
+                [tracking_branch.target])
+
+            # Re-lookup branch since it's changed
+            tracking_branch = self._repo.lookup_branch(self.tracking)
 
         ahead, behind = self._repo.ahead_behind(tracking_branch.target, remote_tracking.target)
         merge_analysis, _ = self._repo.merge_analysis(remote_tracking.target)

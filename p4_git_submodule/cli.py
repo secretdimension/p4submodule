@@ -65,7 +65,8 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
 
 @main.command()
 @config_argument('config')
-def update(config: ConfigFile):
+@click.option('-m', '--message', type=str)
+def update(config: ConfigFile, message: Optional[str]):
     for module in config.submodules:
-        module.update()
+        module.update(commit_message=message)
     config.save()

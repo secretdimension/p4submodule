@@ -48,16 +48,23 @@ class MyRemoteCallbacks(pygit2.RemoteCallbacks):
 
 def _toml_property(key: str, reader: Callable[[str], T] = lambda x: x, writer: Callable[[T], str] = lambda x: x) -> property:
     """Helper for generating properties accessing a toml table"""
+    cache_key = f'_{key}'
     def _get(self: Submodule):
+        if cached := getattr(self, cache_key, None):
+            return cached
         try:
-            return reader(self._table[key])
+            result = reader(self._table[key])
+            setattr(self, cache_key, result)
+            return result
         except tomlkit.exceptions.NonExistentKey:
             return None
 
     def _set(self, new):
+        setattr(self, cache_key, new)
         self._table[key] = writer(new)
 
     def _del(self):
+        setattr(self, cache_key, None)
         return self._table.__delitem__(key)
 
     return property(_get, _set, _del)

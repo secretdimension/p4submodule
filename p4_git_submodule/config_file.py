@@ -13,7 +13,7 @@ class ConfigFile(TOMLFile):
 
     CONFIG_FILE = "submodule.toml"
 
-    path: Path
+    _path: Path
     """The path to the config file"""
 
     _document: TOMLDocument
@@ -28,8 +28,6 @@ class ConfigFile(TOMLFile):
         if path.is_dir():
             path /= ConfigFile.CONFIG_FILE
 
-        self.path = path
-
         super().__init__(path)
 
         if path.exists():
@@ -43,12 +41,12 @@ class ConfigFile(TOMLFile):
         submodules: list[Submodule] = []
 
         for name, child in self._document.get('submodule', dict()).items():
-            submodules.append(Submodule(name, self.path.parent, child))
+            submodules.append(Submodule(name, self._path.parent, child))
 
         # Create a submodule from root-level settings
         if len(self._document) > 0:
-            name = self._document.get('name', self.path.parent.name)
-            submodules.insert(0, Submodule(name, self.path.parent, self._document))
+            name = self._document.get('name', self._path.parent.name)
+            submodules.insert(0, Submodule(name, self._path.parent, self._document))
 
         return submodules
 
@@ -66,7 +64,7 @@ class ConfigFile(TOMLFile):
             new_table = tomlkit.api.table()
             submodule_table.add(name, new_table)
 
-        return Submodule(name, self.path.parent, new_table)
+        return Submodule(name, self._path.parent, new_table)
 
     def save(self) -> None:
         """Save changes to the config file"""

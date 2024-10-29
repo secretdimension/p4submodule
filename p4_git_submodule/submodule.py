@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from os.path import expanduser
 from pathlib import Path
-from typing import Optional, T
+from typing import Optional, T, TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse, ParseResult
 
 import click
@@ -13,7 +13,9 @@ import tomlkit.exceptions
 from paramiko.config import SSHConfig
 from pygit2.enums import MergeAnalysis, ResetMode
 
-from .p4_context import P4Path, P4Context
+if TYPE_CHECKING:
+    from .config_file import ConfigFile
+    from .p4_context import P4Path
 
 URL = ParseResult
 
@@ -79,14 +81,8 @@ class Submodule(object):
     name: str
     """The Name of the submodule (defaults to the directory the config file lives in)"""
 
-    _p4: P4Context
-    """The P4 context to work with"""
-
-    _config_dir: Path
-    """The path to the directory this submodule came from"""
-
-    _config_dir_ws: P4Path
-    """The p4-workspace-relative path to the directory this submodule came from """
+    _config: ConfigFile
+    """The config file this submodule came from"""
 
     _table: tomlkit.api.Table
     """The table describing the configuration of the submodule"""
@@ -97,7 +93,7 @@ class Submodule(object):
     # The below come from the config
 
     path: Path = _toml_property('path', Path, str)
-    """The path to the repo (relative to the file) (MAY BE NONE, see full_path)"""
+    """The path to the repo (relative to the file) (MAY BE NONE, see local_path)"""
 
     remote: URL = _toml_property('remote', urlparse, urlunparse)
     """The remote URL to sync with"""
@@ -108,32 +104,30 @@ class Submodule(object):
     current_ref: Optional[pygit2.Oid] = _toml_property('current_ref', lambda str: pygit2.Oid(hex=str), lambda oid: oid.raw.hex())
     """The currently synced revision"""
 
-    def __init__(self, name: str, p4: P4Context, config_dir: Path, config: tomlkit.api.Table) -> None:
+    def __init__(self, name: str, config: ConfigFile, table: tomlkit.api.Table) -> None:
         self.name = name
-        self._p4 = p4
-        self._config_dir = config_dir
-        self._config_dir_ws = P4Path(f'//{p4.client}') / config_dir.relative_to(p4.client_root)
-        self._table = config
+        self._config = config
+        self._table = table
 
-        if path := pygit2.discover_repository(self.full_path):
+        if path := pygit2.discover_repository(self.local_path):
             self._repo = pygit2.Repository(path)
         else:
             self._repo = None
 
     @property
-    def full_path(self) -> Path:
-        return (self._config_dir / (self.path or '.')).resolve()
+    def local_path(self) -> Path:
+        return (self._config.directory / (self.path or '.')).resolve()
 
-    @full_path.setter
-    def set_full_path(self, path: Path):
-        self.path = path.relative_to(self._config_dir)
+    @local_path.setter
+    def set_local_path(self, path: Path):
+        self.path = path.relative_to(self._config.directory)
 
     @property
-    def full_ws_path(self) -> P4Path:
-        return self._config_dir_ws / (self.path or '.')
+    def ws_path(self) -> P4Path:
+        return self._config.directory_ws / (self.path or '.')
 
     def __repr__(self) -> str:
-        return f'Submodule(name="{self.name}" path="{self.full_path}")'
+        return f'Submodule(name="{self.name}" path="{self.local_path}")'
 
 
     # Functionality
@@ -150,7 +144,7 @@ class Submodule(object):
             ) as progress_bar:
             self._repo = pygit2.clone_repository(
                 self.remote.geturl(),
-                self.full_path,
+                self.local_path,
                 checkout_branch=self.tracking,
                 # depth=1, # NOTE: This breaks everything
                 callbacks=MyRemoteCallbacks(progress_bar))

@@ -4,7 +4,7 @@ from tomlkit.toml_document import TOMLDocument
 from tomlkit.toml_file import TOMLFile
 from typing import Optional
 
-from .p4_context import P4Context
+from .p4_context import P4Path, P4Context
 from .submodule import Submodule
 
 class ConfigFile(TOMLFile):
@@ -45,17 +45,21 @@ class ConfigFile(TOMLFile):
         return self._path.parent
 
     @property
+    def directory_ws(self) -> P4Path:
+        return P4Path(f'//{self._p4.client}') / self.directory.relative_to(self._p4.client_root)
+
+    @property
     def submodules(self) -> list[Submodule]:
         """Collect the list of submodules from the config file"""
         submodules: list[Submodule] = []
 
         for name, child in self._document.get('submodule', dict()).items():
-            submodules.append(Submodule(name, self._p4, self.directory, child))
+            submodules.append(Submodule(name, self, child))
 
         # Create a submodule from root-level settings
         if len(self._document) > 0:
             name = self._document.get('name', self.directory.name)
-            submodules.insert(0, Submodule(name, self._p4, self.directory, self._document))
+            submodules.insert(0, Submodule(name, self, self._document))
 
         return submodules
 
@@ -73,7 +77,7 @@ class ConfigFile(TOMLFile):
             new_table = tomlkit.api.table()
             submodule_table.add(name, new_table)
 
-        return Submodule(name, self._p4, self.directory, new_table)
+        return Submodule(name, self, new_table)
 
     def save(self) -> None:
         """Save changes to the config file"""

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional, T
 from urllib.parse import urlparse, urlunparse, ParseResult
 
+import click
 import pygit2
 import tomlkit.api
 import tomlkit.exceptions
@@ -15,6 +16,10 @@ from pygit2.enums import MergeAnalysis, ResetMode
 URL = ParseResult
 
 class MyRemoteCallbacks(pygit2.RemoteCallbacks):
+
+    def __init__(self, progress_bar, credentials = None, certificate = None) -> None:
+        super().__init__(credentials, certificate)
+        self.progress_bar = progress_bar
 
     def credentials(self, url_str, username_from_url, allowed_types):
         url = urlparse(url_str)
@@ -35,6 +40,11 @@ class MyRemoteCallbacks(pygit2.RemoteCallbacks):
 
         else:
             return None
+
+    def transfer_progress(self, stats: pygit2.remotes.TransferProgress):
+        if self.progress_bar:
+            self.progress_bar.length = stats.total_objects
+            self.progress_bar.update(stats.indexed_objects - self.progress_bar._completed_intervals)
 
 def _toml_property(key: str, reader: Callable[[str], T] = lambda x: x, writer: Callable[[T], str] = lambda x: x) -> property:
     """Helper for generating properties accessing a toml table"""
@@ -112,12 +122,17 @@ class Submodule(object):
         if self._repo:
             raise Exception("Cannot clone() submodule that is already cloned!")
 
-        self._repo = pygit2.clone_repository(
-            self.remote.geturl(),
-            self.full_path,
-            checkout_branch=self.tracking,
-            # depth=1, # NOTE: This breaks everything
-            callbacks=MyRemoteCallbacks())
+        with click.progressbar(
+                label="Cloning...",
+                show_percent=True,
+                length=100,
+            ) as progress_bar:
+            self._repo = pygit2.clone_repository(
+                self.remote.geturl(),
+                self.full_path,
+                checkout_branch=self.tracking,
+                # depth=1, # NOTE: This breaks everything
+                callbacks=MyRemoteCallbacks(progress_bar))
 
         # If user didn't specify a tracking branch, populate it from the default cloned
         if not self.tracking:
@@ -137,7 +152,12 @@ class Submodule(object):
         tracking_branch = self._repo.lookup_branch(self.tracking)
 
         # Fetch latest changes
-        self._repo.remotes[tracking_branch.upstream.remote_name].fetch(callbacks=MyRemoteCallbacks())
+        with click.progressbar(
+                label="Fetching...",
+                show_percent=True,
+                length=100,
+            ) as progress_bar:
+            self._repo.remotes[tracking_branch.upstream.remote_name].fetch(callbacks=MyRemoteCallbacks(progress_bar))
 
         remote_tracking = self._repo.lookup_reference(tracking_branch.upstream_name)
 

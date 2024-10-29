@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import os
 import socket
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import P4
+
+P4Path = PurePosixPath
 
 class P4Context(P4.P4):
     """

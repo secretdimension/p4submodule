@@ -13,6 +13,8 @@ import tomlkit.exceptions
 from paramiko.config import SSHConfig
 from pygit2.enums import MergeAnalysis, ResetMode
 
+from .p4_context import P4Path, P4Context
+
 URL = ParseResult
 
 class MyRemoteCallbacks(pygit2.RemoteCallbacks):
@@ -77,8 +79,14 @@ class Submodule(object):
     name: str
     """The Name of the submodule (defaults to the directory the config file lives in)"""
 
+    _p4: P4Context
+    """The P4 context to work with"""
+
     _config_dir: Path
-    """The path to the config file this submodule came from"""
+    """The path to the directory this submodule came from"""
+
+    _config_dir_ws: P4Path
+    """The p4-workspace-relative path to the directory this submodule came from """
 
     _table: tomlkit.api.Table
     """The table describing the configuration of the submodule"""
@@ -100,9 +108,11 @@ class Submodule(object):
     current_ref: Optional[pygit2.Oid] = _toml_property('current_ref', lambda str: pygit2.Oid(hex=str), lambda oid: oid.raw.hex())
     """The currently synced revision"""
 
-    def __init__(self, name: str, config_dir: Path, config: tomlkit.api.Table) -> None:
+    def __init__(self, name: str, p4: P4Context, config_dir: Path, config: tomlkit.api.Table) -> None:
         self.name = name
+        self._p4 = p4
         self._config_dir = config_dir
+        self._config_dir_ws = P4Path(f'//{p4.client}') / config_dir.relative_to(p4.client_root)
         self._table = config
 
         if path := pygit2.discover_repository(self.full_path):
@@ -117,6 +127,10 @@ class Submodule(object):
     @full_path.setter
     def set_full_path(self, path: Path):
         self.path = path.relative_to(self._config_dir)
+
+    @property
+    def full_ws_path(self) -> P4Path:
+        return self._config_dir_ws / (self.path or '.')
 
     def __repr__(self) -> str:
         return f'Submodule(name="{self.name}" path="{self.full_path}")'

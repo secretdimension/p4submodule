@@ -4,6 +4,7 @@ from tomlkit.toml_document import TOMLDocument
 from tomlkit.toml_file import TOMLFile
 from typing import Optional
 
+from .p4_context import P4Context
 from .submodule import Submodule
 
 class ConfigFile(TOMLFile):
@@ -16,9 +17,11 @@ class ConfigFile(TOMLFile):
     _path: Path
     """The path to the config file"""
 
+    _p4: P4Context
+
     _document: TOMLDocument
 
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path: Path, p4: P4Context) -> None:
         if not isinstance(path, Path):
             path = Path(path)
 
@@ -30,10 +33,16 @@ class ConfigFile(TOMLFile):
 
         super().__init__(path)
 
+        self._p4 = p4
+
         if path.exists():
             self._document = self.read()
         else:
             self._document = TOMLDocument()
+
+    @property
+    def directory(self) -> Path:
+        return self._path.parent
 
     @property
     def submodules(self) -> list[Submodule]:
@@ -41,12 +50,12 @@ class ConfigFile(TOMLFile):
         submodules: list[Submodule] = []
 
         for name, child in self._document.get('submodule', dict()).items():
-            submodules.append(Submodule(name, self._path.parent, child))
+            submodules.append(Submodule(name, self._p4, self.directory, child))
 
         # Create a submodule from root-level settings
         if len(self._document) > 0:
-            name = self._document.get('name', self._path.parent.name)
-            submodules.insert(0, Submodule(name, self._path.parent, self._document))
+            name = self._document.get('name', self.directory.name)
+            submodules.insert(0, Submodule(name, self._p4, self.directory, self._document))
 
         return submodules
 
@@ -64,7 +73,7 @@ class ConfigFile(TOMLFile):
             new_table = tomlkit.api.table()
             submodule_table.add(name, new_table)
 
-        return Submodule(name, self._path.parent, new_table)
+        return Submodule(name, self._p4, self.directory, new_table)
 
     def save(self) -> None:
         """Save changes to the config file"""

@@ -16,14 +16,22 @@ def config_argument(*param_decls: str):
     """
     Creates a click optional argument for receiving a ConfigFile parameter
     """
+    class ConfigFileParamType(click.ParamType):
+        name = "ConfigFile"
+
+        def convert(self, value, param: click.Parameter | None, ctx: click.Context | None):
+            if not isinstance(value, Path):
+                value = Path(value)
+
+            p4 = ctx.find_object(P4Context)
+            return ConfigFile(value, p4)
+
     return click.argument(
         *param_decls,
-        type=ConfigFile,
+        type=ConfigFileParamType(),
         required=False,
         default='.',
     )
-
-pass_p4 = click.make_pass_decorator(P4Context, ensure=True)
 
 @click.group()
 @click.pass_context
@@ -49,14 +57,13 @@ def dump_config(config: ConfigFile):
         print(f'{module}: {vars(module)}')
 
 @main.command()
-@pass_p4
 @config_argument('config')
 @click.option('--name', type=str)
 @click.option('--remote', type=str, prompt=True)
 @click.option('--tracking', type=str)
 @click.option('--path', type=Path)
 @click.option('--no-sync', type=bool, is_flag=True)
-def create(p4: P4Context, config: ConfigFile, name: Optional[str], remote: str, tracking: Optional[str], path: Optional[Path], no_sync: bool):
+def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optional[str], path: Optional[Path], no_sync: bool):
     new = config.add_submodule(name, name is None)
 
     if match := GIT_SSH_REGEX.match(remote):
@@ -80,10 +87,9 @@ def create(p4: P4Context, config: ConfigFile, name: Optional[str], remote: str, 
     config.save()
 
 @main.command()
-@pass_p4
 @config_argument('config')
 @click.option('-m', '--message', type=str)
-def update(p4: P4Context, config: ConfigFile, message: Optional[str]):
+def update(config: ConfigFile, message: Optional[str]):
     for module in config.submodules:
         module.update(commit_message=message)
     config.save()

@@ -63,8 +63,13 @@ class ConfigFile(TOMLFile):
 
         return submodules
 
-    def add_submodule(self, name: Optional[str], is_root: bool = False) -> Submodule:
+    def add_submodule(self, name: Optional[str], path: Optional[Path], is_root: bool = False) -> Submodule:
         """Create a new submodule and add it to the file"""
+        if path:
+            path = path.resolve()
+            if path.is_absolute():
+                path = path.relative_to(self.directory)
+
         if is_root:
             new_table = tomlkit.api.Table(self._document, tomlkit.api.Trivia(), False)
             if name:
@@ -77,7 +82,9 @@ class ConfigFile(TOMLFile):
             new_table = tomlkit.api.table()
             submodule_table.add(name, new_table)
 
-        return Submodule(name, self, new_table)
+        new_submodule = Submodule(name, self, new_table)
+        new_submodule.path = path
+        return new_submodule
 
     def save(self) -> None:
         """Save changes to the config file"""

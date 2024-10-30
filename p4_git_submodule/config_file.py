@@ -90,9 +90,7 @@ class ConfigFile(TOMLFile):
             new_table = tomlkit.api.table()
             submodule_table.add(name, new_table)
 
-        new_submodule = Submodule(name, self, new_table)
-        new_submodule.path = path
-        return new_submodule
+        return Submodule(name, self, new_table, path=path)
 
     def save(self, change_number: int) -> None:
         """Save changes to the config file"""

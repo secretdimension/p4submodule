@@ -104,10 +104,13 @@ class Submodule(object):
     current_ref: Optional[pygit2.Oid] = _toml_property('current_ref', lambda str: pygit2.Oid(hex=str), lambda oid: oid.raw.hex())
     """The currently synced revision"""
 
-    def __init__(self, name: str, config: ConfigFile, table: tomlkit.api.Table) -> None:
-        self.name = name
+    def __init__(self, name: Optional[str], config: ConfigFile, table: tomlkit.api.Table, path: Optional[Path]) -> None:
         self._config = config
         self._table = table
+        if path:
+            self.path = path
+
+        self.name = name or self.local_path.name
 
         if path := pygit2.discover_repository(self.local_path):
             self._repo = pygit2.Repository(path)

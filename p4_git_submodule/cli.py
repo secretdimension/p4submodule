@@ -77,9 +77,11 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
         raise click.UsageError('When --no-sync is passed, --tracking is required!')
 
     if not no_sync:
-        new.clone()
+        _, change_number = new.clone()
 
-    config.save()
+    config.save(change_number)
+
+    print(f"Added submodule {new.name} in CL {change_number}")
 
 @main.command()
 @config_argument('config')
@@ -87,4 +89,4 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
 def update(config: ConfigFile, message: Optional[str]):
     for module in config.submodules:
         module.update(commit_message=message)
-    config.save()
+    config.save(0)

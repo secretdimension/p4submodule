@@ -21,6 +21,8 @@ class ConfigFile(TOMLFile):
 
     _document: TOMLDocument
 
+    _is_new: bool
+
     def __init__(self, path: Path, p4: P4Context) -> None:
         if not isinstance(path, Path):
             path = Path(path)
@@ -36,9 +38,15 @@ class ConfigFile(TOMLFile):
         self._p4 = p4
 
         if path.exists():
+            self._is_new = False
             self._document = self.read()
         else:
+            self._is_new = True
             self._document = TOMLDocument()
+
+    @property
+    def p4(self) -> P4Context:
+        return self._p4
 
     @property
     def directory(self) -> Path:
@@ -86,7 +94,17 @@ class ConfigFile(TOMLFile):
         new_submodule.path = path
         return new_submodule
 
-    def save(self) -> None:
+    def save(self, change_number: int) -> None:
         """Save changes to the config file"""
+
+        file_path_ws = P4Path(f'//{self._p4.client}') / self._path.relative_to(self._p4.client_root)
+        p4_args = ['-c', str(change_number), file_path_ws]
+
+        if not self._is_new:
+            self.p4.run_edit(*p4_args)
+
         self.write(self._document)
+
+        if self._is_new:
+            self.p4.run_add(*p4_args)
 

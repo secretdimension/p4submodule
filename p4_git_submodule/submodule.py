@@ -132,7 +132,7 @@ class Submodule(object):
 
     # Functionality
 
-    def clone(self) -> pygit2.Repository:
+    def clone(self) -> tuple[pygit2.Repository, int]:
         """Clone the submodule into the relevant directory (directory _cannot_ already exist)"""
         if self._repo:
             raise Exception("Cannot clone() submodule that is already cloned!")
@@ -155,7 +155,14 @@ class Submodule(object):
 
         self.current_ref = self._repo.head.resolve().target
 
-        return self._repo
+        change = self._config._p4.fetch_change()
+        change._description = f"""
+        Adding submodule {self.name}
+        """.strip()
+        change_num = self._config.p4.save_change(change)
+        self._config._p4.run_add("-c", str(change_num), *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
+
+        return self._repo, change_num
 
 
     def update(self, commit_message: Optional[str] = None) -> None:

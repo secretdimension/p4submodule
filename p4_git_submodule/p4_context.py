@@ -21,6 +21,10 @@ class P4Context(P4.P4):
         # We want with statements to connect to the p4 server
         return super().__enter__().connect()
 
+    def save_change(self, change) -> int:
+        """Wrapper around super().save_change that returns the CL number"""
+        return int(super().__getattr__('save_change')(change)[0].split()[1])
+
     @property
     def client_root(self) -> str:
         """The working directory of the currently set client"""

@@ -1,0 +1,25 @@
+name: push
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: pipx install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "poetry"
+
+      - run: poetry check
+
+      - name: poetry install
+        run: poetry install --no-interaction
+
+      - run: poetry build

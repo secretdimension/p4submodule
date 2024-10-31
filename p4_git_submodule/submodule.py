@@ -186,6 +186,10 @@ class Submodule(object):
 
         remote_tracking = self._repo.lookup_reference(tracking_branch.upstream_name)
 
+        # Update the index to the last known commit
+        self._repo.reset(self.current_ref, ResetMode.MIXED)
+        tracking_branch = self._repo.lookup_branch(self.tracking)
+
         # Check for uncommitted changes
         if self._repo.status():
             if not commit_message:

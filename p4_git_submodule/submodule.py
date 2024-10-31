@@ -168,7 +168,7 @@ class Submodule(object):
         return self._repo, change_num
 
 
-    def update(self, commit_message: Optional[str] = None) -> None:
+    def update(self, change_number: int, commit_message: Optional[str] = None) -> None:
         if not self._repo:
             raise Exception("Cannot update submodule which has not been cloned!")
         if not self.current_ref:
@@ -217,12 +217,16 @@ class Submodule(object):
         elif merge_analysis & MergeAnalysis.FASTFORWARD:
             assert(ahead == 0)
 
+            self._config.p4.run_edit('-c', str(change_number), self.ws_path / '...')
+
             # Point the tracking branch at the remote branch
             tracking_branch.set_target(remote_tracking.target)
             # Update the index
             self._repo.checkout(tracking_branch)
             # Update the working tree
             self._repo.reset(tracking_branch.target, ResetMode.HARD)
+
+            self._config.p4.run_add('-c', str(change_number), self.ws_path / '...')
 
             print(f"Fast-forward updated {behind} commits to {tracking_branch.upstream_name} ({remote_tracking.target})")
 

@@ -87,6 +87,15 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
 @config_argument('config')
 @click.option('-m', '--message', type=str)
 def update(config: ConfigFile, message: Optional[str]):
+    change = config.p4.fetch_change()
+    change._description = f"""
+    Update submodules in {config.directory_ws}
+    """
+    change_number = config.p4.save_change(change)
+
     for module in config.submodules:
-        module.update(commit_message=message)
-    config.save(0)
+        module.update(change_number=change_number, commit_message=message)
+
+    config.save(change_number)
+
+    print(f"Updated submodules in {config.directory} in CL {change_number}")

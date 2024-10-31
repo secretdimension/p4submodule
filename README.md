@@ -1,3 +1,3 @@
-## p4-git-submodule
+## p4submodule
 
 A tool for managing git repositories inside of Perforce depots.

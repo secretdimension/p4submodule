@@ -17,7 +17,7 @@ paramiko = "^3.5.0"
 [tool.poetry.group.dev.dependencies]
 types-paramiko = "^3.5.0.20240928"
 types-pygit2 = "^1.15.0.20240822"
-mypy = "^1.13.0"
+pytype = "^2024.10.11"
 
 [tool.poetry.scripts]
 p4submodule = "p4submodule.cli:main"
@@ -26,4 +26,5 @@ p4submodule = "p4submodule.cli:main"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.mypy]
+[tool.pytype]
+inputs = ['.']

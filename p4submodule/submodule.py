@@ -35,7 +35,7 @@ class MyRemoteCallbacks(pygit2.RemoteCallbacks):
         elif allowed_types & pygit2.enums.CredentialType.SSH_KEY:
             ssh_config_path = Path(expanduser('~/.ssh/config'))
             if not ssh_config_path.exists():
-                config = SSHConfig.from_path(ssh_config_path)
+                config = SSHConfig.from_path(str(ssh_config_path))
                 if url_config := config.lookup(url.hostname):
                     if privkey := url_config.get('identityfile'):
                         return pygit2.Keypair(username_from_url, expanduser(privkey) + ".pub", expanduser(privkey), "")

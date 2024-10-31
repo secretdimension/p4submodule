@@ -20,10 +20,16 @@ def config_argument(*param_decls: str):
         name = "ConfigFile"
 
         def convert(self, value, param: click.Parameter | None, ctx: click.Context | None):
+            if not ctx:
+                raise Exception("ctx must be set!")
+
             if not isinstance(value, Path):
                 value = Path(value)
 
             p4 = ctx.find_object(P4Context)
+            if not p4:
+                ctx.fail("internal error: p4 object must be set!")
+
             return ConfigFile(value, p4)
 
     return click.argument(

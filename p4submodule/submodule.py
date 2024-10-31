@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from os.path import expanduser
 from pathlib import Path
-from typing import Optional, T, TYPE_CHECKING
+from typing import Optional, TypeVar, TYPE_CHECKING
 from urllib.parse import urlparse, urlunparse, ParseResult
 
 import click
@@ -16,12 +16,13 @@ from pygit2.enums import MergeAnalysis, ResetMode
 if TYPE_CHECKING:
     from .config_file import ConfigFile
     from .p4_context import P4Path
+    T = TypeVar('T')
 
 URL = ParseResult
 
 class MyRemoteCallbacks(pygit2.RemoteCallbacks):
 
-    def __init__(self, progress_bar, credentials = None, certificate = None) -> None:
+    def __init__(self, progress_bar: Optional[click.termui.ProgressBar], credentials = None, certificate = None) -> None:
         super().__init__(credentials, certificate)
         self.progress_bar = progress_bar
 
@@ -84,7 +85,7 @@ class Submodule(object):
     _config: ConfigFile
     """The config file this submodule came from"""
 
-    _table: tomlkit.api.Table
+    _table: tomlkit.api.Container
     """The table describing the configuration of the submodule"""
 
     _repo: Optional[pygit2.Repository]
@@ -92,19 +93,19 @@ class Submodule(object):
 
     # The below come from the config
 
-    path: Path = _toml_property('path', Path, str)
+    path: Path = _toml_property('path', Path, str) # type: ignore
     """The path to the repo (relative to the file) (MAY BE NONE, see local_path)"""
 
-    remote: URL = _toml_property('remote', urlparse, urlunparse)
+    remote: URL = _toml_property('remote', urlparse, urlunparse) # type: ignore
     """The remote URL to sync with"""
 
-    tracking: str = _toml_property('tracking')
+    tracking: str = _toml_property('tracking') # type: ignore
     """The remote ref to track when syncing"""
 
-    current_ref: Optional[pygit2.Oid] = _toml_property('current_ref', lambda str: pygit2.Oid(hex=str), lambda oid: oid.raw.hex())
+    current_ref: Optional[pygit2.Oid] = _toml_property('current_ref', lambda str: pygit2.Oid(hex=str), lambda oid: oid.raw.hex()) # type: ignore
     """The currently synced revision"""
 
-    def __init__(self, name: Optional[str], config: ConfigFile, table: tomlkit.api.Table, path: Optional[Path] = None) -> None:
+    def __init__(self, name: Optional[str], config: ConfigFile, table: tomlkit.api.Container, path: Optional[Path] = None) -> None:
         self._config = config
         self._table = table
         if path:
@@ -112,8 +113,8 @@ class Submodule(object):
 
         self.name = name or self.local_path.name
 
-        if path := pygit2.discover_repository(self.local_path):
-            self._repo = pygit2.Repository(path)
+        if repo_path := pygit2.discover_repository(str(self.local_path)):
+            self._repo = pygit2.Repository(repo_path)
         else:
             self._repo = None
 
@@ -122,7 +123,7 @@ class Submodule(object):
         return (self._config.directory / (self.path or '.')).resolve()
 
     @local_path.setter
-    def set_local_path(self, path: Path):
+    def local_path(self, path: Path):
         self.path = path.relative_to(self._config.directory)
 
     @property
@@ -147,7 +148,7 @@ class Submodule(object):
             ) as progress_bar:
             self._repo = pygit2.clone_repository(
                 self.remote.geturl(),
-                self.local_path,
+                str(self.local_path),
                 checkout_branch=self.tracking,
                 # depth=1, # NOTE: This breaks everything
                 callbacks=MyRemoteCallbacks(progress_bar))

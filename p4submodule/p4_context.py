@@ -4,7 +4,7 @@ import os
 import socket
 from pathlib import Path, PurePosixPath
 
-import P4
+import P4 # type: ignore
 
 P4Path = PurePosixPath
 
@@ -26,7 +26,7 @@ class P4Context(P4.P4):
         return int(super().__getattr__('save_change')(change)[0].split()[1])
 
     @property
-    def client_root(self) -> str:
+    def client_root(self) -> Path:
         """The working directory of the currently set client"""
 
         # This is required because if you run 'p4 clients -o <whatever>' and <whatever> is a client that doesn't exist,

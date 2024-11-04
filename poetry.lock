@@ -798,6 +798,31 @@ files = [
 types-setuptools = "*"
 
 [[package]]
+name = "types-jinja2"
+version = "2.11.9"
+description = "Typing stubs for Jinja2"
+optional = false
+python-versions = "*"
+files = [
+    {file = "types-Jinja2-2.11.9.tar.gz", hash = "sha256:dbdc74a40aba7aed520b7e4d89e8f0fe4286518494208b35123bcf084d4b8c81"},
+    {file = "types_Jinja2-2.11.9-py3-none-any.whl", hash = "sha256:60a1e21e8296979db32f9374d8a239af4cb541ff66447bb915d8ad398f9c63b2"},
+]
+
+[package.dependencies]
+types-MarkupSafe = "*"
+
+[[package]]
+name = "types-markupsafe"
+version = "1.1.10"
+description = "Typing stubs for MarkupSafe"
+optional = false
+python-versions = "*"
+files = [
+    {file = "types-MarkupSafe-1.1.10.tar.gz", hash = "sha256:85b3a872683d02aea3a5ac2a8ef590193c344092032f58457287fbf8e06711b1"},
+    {file = "types_MarkupSafe-1.1.10-py3-none-any.whl", hash = "sha256:ca2bee0f4faafc45250602567ef38d533e877d2ddca13003b319c551ff5b3cc5"},
+]
+
+[[package]]
 name = "types-paramiko"
 version = "3.5.0.20240928"
 description = "Typing stubs for paramiko"
@@ -850,4 +875,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "b095e84123adbafc343843ac9bd2b62dc9ffe1cd709f8d1add2ada756bc9acc2"
+content-hash = "af4a3305467822f981c2ec11d60078991c6f1003fa78b4e6e218b69c494e7c2d"

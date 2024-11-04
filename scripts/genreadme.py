@@ -20,7 +20,7 @@ def _generate_commands(name: str, root_command: click.Command) -> list[click.Con
 
     return results
 
-def _generate_readme(template_path: str, out_path: str, commands: list[click.Context]) -> None:
+def _generate_readme(template_path: Path, out_path: Path, commands: list[click.Context]) -> None:
     jinja = Environment(
         loader=FileSystemLoader([os.getcwd()]),
         autoescape=select_autoescape(),

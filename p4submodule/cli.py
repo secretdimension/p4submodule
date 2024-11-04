@@ -105,9 +105,14 @@ def update(config: ConfigFile, message: Optional[str]):
     """
     change_number = config.p4.save_change(change)
 
+    any_updates = False
     for module in config.submodules:
-        module.update(change_number=change_number, commit_message=message)
+        any_updates = any_updates or module.update(change_number=change_number, commit_message=message)
 
-    config.save(change_number)
+    if any_updates:
+        config.save(change_number)
+        print(f"Updated submodules in {config.directory} in CL {change_number}")
 
-    print(f"Updated submodules in {config.directory} in CL {change_number}")
+    else:
+        config.p4.delete_change(change_number)
+        print("No submodules were updated")

@@ -169,7 +169,7 @@ class Submodule(object):
         return self._repo, change_num
 
 
-    def update(self, change_number: int, commit_message: Optional[str] = None) -> None:
+    def update(self, change_number: int, commit_message: Optional[str] = None) -> bool:
         if not self._repo:
             raise Exception("Cannot update submodule which has not been cloned!")
         if not self.current_ref:
@@ -189,7 +189,7 @@ class Submodule(object):
 
         if remote_tracking.target == self.current_ref:
             print("Up to date!")
-            return
+            return False
 
         # Update the index to the last known commit
         self._repo.reset(self.current_ref, ResetMode.MIXED)

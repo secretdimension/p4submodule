@@ -24,6 +24,8 @@ def _generate_readme(template_path: Path, out_path: Path, commands: list[click.C
     jinja = Environment(
         loader=FileSystemLoader([os.getcwd()]),
         autoescape=select_autoescape(),
+        trim_blocks=True,
+        lstrip_blocks=True,
     )
 
     template = jinja.get_template(str(template_path))

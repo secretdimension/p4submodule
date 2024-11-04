@@ -57,6 +57,10 @@ class ConfigFile(TOMLFile):
         return P4Path(f'//{self._p4.client}') / self.directory.relative_to(self._p4.client_root)
 
     @property
+    def directory_depot(self) -> P4Path:
+        return P4Path(self._p4.run_where(self.directory)[0]['depotFile'])
+
+    @property
     def submodules(self) -> list[Submodule]:
         """Collect the list of submodules from the config file"""
         submodules: list[Submodule] = []

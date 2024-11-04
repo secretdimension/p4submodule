@@ -101,7 +101,7 @@ def update(config: ConfigFile, message: Optional[str]):
 
     change = config.p4.fetch_change()
     change._description = f"""
-    Update submodules in {config.directory_ws}
+    Update submodule{'s' if len(config.submodules) > 1 else ''} in {config.directory_depot}
     """
     change_number = config.p4.save_change(change)
 

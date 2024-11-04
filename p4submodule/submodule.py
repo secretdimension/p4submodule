@@ -11,7 +11,7 @@ import pygit2
 import tomlkit.api
 import tomlkit.exceptions
 from paramiko.config import SSHConfig
-from pygit2.enums import MergeAnalysis, ResetMode
+from pygit2.enums import BranchType, MergeAnalysis, ResetMode
 
 if TYPE_CHECKING:
     from .config_file import ConfigFile
@@ -170,22 +170,40 @@ class Submodule(object):
 
 
     def update(self, change_number: int, commit_message: Optional[str] = None) -> bool:
-        if not self._repo:
-            raise Exception("Cannot update submodule which has not been cloned!")
         if not self.current_ref:
             raise Exception("Repo is missing current_ref, cannot update!")
 
-        tracking_branch = self._repo.lookup_branch(self.tracking)
+        tracking_branch: Optional[pygit2.Branch] = None
+        remote_name: Optional[str] = None
+        if self._repo:
+            tracking_branch = self._repo.lookup_branch(self.tracking, BranchType.LOCAL)
+            if tracking_branch and tracking_branch.upstream:
+                remote_name = tracking_branch.upstream.remote_name
+            elif self._repo.remotes:
+                remote_name = self._repo.remotes[0].name
+
+        else:
+            self._repo = pygit2.init_repository(
+                path=self.local_path,
+                origin_url=self.remote.geturl(),
+                initial_head=self.tracking,
+            )
+
+        remote_name = remote_name or 'origin'
 
         # Fetch latest changes
         with click.progressbar(
-                label="Fetching...",
+                label=f"Fetching {remote_name}...",
                 show_percent=True,
                 length=100,
             ) as progress_bar:
-            self._repo.remotes[tracking_branch.upstream.remote_name].fetch(callbacks=MyRemoteCallbacks(progress_bar))
+            self._repo.remotes[remote_name].fetch(callbacks=MyRemoteCallbacks(progress_bar))
 
-        remote_tracking = self._repo.lookup_reference(tracking_branch.upstream_name)
+        if not tracking_branch:
+            tracking_branch = self._repo.create_branch(self.tracking, self._repo[self.current_ref].peel(pygit2.Commit))
+            self._repo.reset(self.current_ref, ResetMode.MIXED)
+
+        remote_tracking = self._repo.lookup_branch(f'{remote_name}/{self.tracking}', BranchType.REMOTE)
 
         if remote_tracking.target == self.current_ref:
             print("Up to date!")

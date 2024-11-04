@@ -25,3 +25,31 @@ jobs:
       - run: poetry build
 
       - run: poetry run pytype
+
+  generate-readme:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: pipx install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "poetry"
+
+      - name: poetry install
+        run: poetry install --with dev --no-interaction
+
+      - name: generate readme
+        run: poetry run python scripts/genreadme.py --module p4submodule.cli --template ./README.md.in --out README.md
+
+      - name: commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update README"
+          file_pattern: "README.md"

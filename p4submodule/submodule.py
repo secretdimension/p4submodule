@@ -187,6 +187,10 @@ class Submodule(object):
 
         remote_tracking = self._repo.lookup_reference(tracking_branch.upstream_name)
 
+        if remote_tracking.target == self.current_ref:
+            print("Up to date!")
+            return
+
         # Update the index to the last known commit
         self._repo.reset(self.current_ref, ResetMode.MIXED)
         tracking_branch = self._repo.lookup_branch(self.tracking)
@@ -199,7 +203,7 @@ class Submodule(object):
             self._repo.index.add_all()
             self._repo.index.write()
 
-            self._repo.create_commit(
+            new_commit = self._repo.create_commit(
                 tracking_branch.name,
                 self._repo.default_signature,
                 self._repo.default_signature,
@@ -210,39 +214,57 @@ class Submodule(object):
             # Re-lookup branch since it's changed
             tracking_branch = self._repo.lookup_branch(self.tracking)
 
+            assert tracking_branch.target == new_commit, "New commit did not land correctly"
+
+            print(f"Committed local changes on branch {tracking_branch.name} as {new_commit}")
+
         ahead, behind = self._repo.ahead_behind(tracking_branch.target, remote_tracking.target)
         merge_analysis, _ = self._repo.merge_analysis(remote_tracking.target)
+        base = self._repo.merge_base(tracking_branch.target, remote_tracking.target)
+        assert base == self.current_ref, "Merge base should be the most recently pulled remote change"
+
+        print(f"Local branch is {ahead} commits ahead of remote, {behind} commits behind remote")
 
         if merge_analysis & MergeAnalysis.UP_TO_DATE:
-            assert(ahead == 0)
-
-            print("Up to date!")
-            return
-
-        elif merge_analysis & MergeAnalysis.FASTFORWARD:
-            assert(ahead == 0)
-
-            self._config.p4.run_edit('-c', str(change_number), self.ws_path / '...')
-
-            # Point the tracking branch at the remote branch
-            tracking_branch.set_target(remote_tracking.target)
-            # Update the index
-            self._repo.checkout(tracking_branch)
-            # Update the working tree
-            self._repo.reset(tracking_branch.target, ResetMode.HARD)
-
-            self._config.p4.run_add('-c', str(change_number), self.ws_path / '...')
-
-            print(f"Fast-forward updated {behind} commits to {tracking_branch.upstream_name} ({remote_tracking.target})")
-
-        elif merge_analysis & MergeAnalysis.NORMAL:
-            assert(ahead > 0)
-
-            print(f"Local branch is {ahead} commits ahead of remote, {behind} commits behind remote")
-            raise Exception("Merge commit is required, unsupported")
+            assert False, "This should have been caught above"
 
         elif merge_analysis & MergeAnalysis.NONE:
             raise Exception("No merge possible!")
+
+        elif merge_analysis & MergeAnalysis.FASTFORWARD:
+            assert ahead == 0
+
+        elif merge_analysis & MergeAnalysis.NORMAL:
+            assert ahead > 0
+
+        self._config.p4.run_edit('-c', str(change_number), self.ws_path / '...')
+
+        to_cherrypick: list[pygit2.Oid] = []
+
+        next: pygit2.Commit = self._repo.head.peel(pygit2.Commit)
+        for _ in range(ahead):
+            to_cherrypick.insert(0, next.id)
+            assert len(next.parents) == 1, "Multi-parent commits are not supported!"
+            next = next.parents[0]
+
+        assert next.id == base, "Found incorrect rebase base!"
+
+        # Point the tracking branch at the remote branch
+        tracking_branch.set_target(remote_tracking.target)
+        # Update the index
+        self._repo.checkout(tracking_branch)
+        # Update the working tree
+        self._repo.reset(tracking_branch.target, ResetMode.HARD)
+
+        for commit in to_cherrypick:
+            self._repo.cherrypick(commit)
+
+        print(f"Updated {behind} commits to {tracking_branch.upstream_name} ({remote_tracking.target})")
+
+        if to_cherrypick:
+            print(f"Files changed locally are staged in git's index (use \"git cherry-pick --continue\" to commit them)")
+
+        self._config.p4.run_add("-c", str(change_number), *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
 
         # Update the current_ref and save it
         self.current_ref = remote_tracking.target

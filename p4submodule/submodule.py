@@ -245,5 +245,5 @@ class Submodule(object):
             raise Exception("No merge possible!")
 
         # Update the current_ref and save it
-        self.current_ref = self._repo.head.resolve().target
+        self.current_ref = remote_tracking.target
 

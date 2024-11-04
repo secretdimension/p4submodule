@@ -1,0 +1,26 @@
+<!---
+DO NOTE EDIT README.MD! Edit README.md.in instead.
+-->
+
+# p4submodule
+
+A tool for managing git repositories inside of Perforce depots.
+
+
+## CLI Documentation
+{% for command in commands if not command.command.hidden %}
+
+### {{ command.info_name }}
+
+{{ command.command.help if command.command.help }}
+
+> {{ command.get_usage() }}
+
+{% for param in command.command.params %}
+{% set param_help = param.get_help_record(command) %}
+{% if param_help %}
+`{{ param_help[0] }}`{{ ' (Defaults to `%s`)' | format(param.default) if param.default }}: {{ param_help[1] }}
+{% endif %}
+{% endfor %}
+
+{% endfor %}

@@ -44,18 +44,18 @@ def _generate_readme(template_path: Path, out_path: Path, commands: list[click.C
 @click.option("--out", type=click.Path(exists=False, dir_okay=False, writable=True, path_type=Path), required=True, prompt=True, help="The path to write the output file to")
 def main(ctx: click.Context, name: Optional[str], module: str, command: str, template: Path, out: Path) -> None:
     try:
-        module_ = import_module(module)
+        target_module = import_module(module)
     except Exception as e:
         ctx.fail(f"Could not import module: '{module}' Error: {str(e)}")
 
     try:
-        command_: click.Command = getattr(module_, command)
+        target_command: click.Command = getattr(target_module, command)
     except:
         ctx.fail(f"Could not find command '{command}' in module '{module}'")
 
     name = name or module.split('.')[0]
 
-    commands = _generate_commands(name, command_)
+    commands = _generate_commands(name, target_command)
     _generate_readme(template, out, commands=commands)
 
 if __name__ == '__main__':

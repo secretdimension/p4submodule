@@ -41,10 +41,12 @@ def config_argument(*param_decls: str):
 
 @click.group()
 @click.pass_context
-@click.option('--p4-port', type=str)
-@click.option('--p4-user', type=str)
-@click.option('--p4-client', type=str)
+@click.option('--p4-port', type=str, help="P4 server address to use intead of inferring from `p4 set`")
+@click.option('--p4-user', type=str, help="P4 username to use intead of inferring from `p4 set`")
+@click.option('--p4-client', type=str, help="P4 workspace to use intead of inferring from `p4 set`")
 def main(ctx: click.Context, p4_port: str, p4_user: str, p4_client: str):
+    """A tool for managing git repositories inside of Perforce depots."""
+
     p4 = P4Context()
 
     if p4_port:
@@ -56,7 +58,7 @@ def main(ctx: click.Context, p4_port: str, p4_user: str, p4_client: str):
 
     ctx.obj = ctx.with_resource(p4)
 
-@main.command()
+@main.command(hidden=True)
 @config_argument('config')
 def dump_config(config: ConfigFile):
     for module in config.submodules:
@@ -64,12 +66,14 @@ def dump_config(config: ConfigFile):
 
 @main.command()
 @config_argument('config')
-@click.option('--name', type=str)
-@click.option('--remote', type=str, prompt=True)
-@click.option('--tracking', type=str)
-@click.option('--path', type=Path)
-@click.option('--no-sync', type=bool, is_flag=True)
+@click.option('--name', type=str, help="(defaults to the checkout directory name) A name used to refer to the submodule", show_default=False)
+@click.option('--remote', type=str, prompt=True, help="The URL for the remote repository to track")
+@click.option('--tracking', type=str, help="The branch to track from the remote")
+@click.option('--path', type=Path, help="The optional relative path from the config file to the checkout directory")
+@click.option('--no-sync', type=bool, is_flag=True, help="Create the submodule config file, but don't clone it")
 def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optional[str], path: Optional[Path], no_sync: bool):
+    """Creates a new submodule."""
+
     new = config.add_submodule(name, path, name is None)
 
     if match := GIT_SSH_REGEX.match(remote):
@@ -91,8 +95,10 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
 
 @main.command()
 @config_argument('config')
-@click.option('-m', '--message', type=str)
+@click.option('-m', '--message', type=str, help="The commit message to use when converting local changes to the target repository type")
 def update(config: ConfigFile, message: Optional[str]):
+    """Fetch & update submodules in config to the latest revision of their tracking branches."""
+
     change = config.p4.fetch_change()
     change._description = f"""
     Update submodules in {config.directory_ws}

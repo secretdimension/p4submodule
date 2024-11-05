@@ -180,7 +180,7 @@ class Submodule(object):
             if tracking_branch and tracking_branch.upstream:
                 remote_name = tracking_branch.upstream.remote_name
             elif self._repo.remotes:
-                remote_name = self._repo.remotes[0].name
+                remote_name = next((remote.name for remote in self._repo.remotes if remote.url == self.remote.geturl()), "origin")
 
         else:
             self._repo = pygit2.init_repository(
@@ -188,8 +188,7 @@ class Submodule(object):
                 origin_url=self.remote.geturl(),
                 initial_head=self.tracking,
             )
-
-        remote_name = remote_name or 'origin'
+            remote_name = 'origin'
 
         # Fetch latest changes
         with click.progressbar(
@@ -259,13 +258,13 @@ class Submodule(object):
 
         to_cherrypick: list[pygit2.Oid] = []
 
-        next: pygit2.Commit = self._repo.head.peel(pygit2.Commit)
+        current_commit: pygit2.Commit = self._repo.head.peel(pygit2.Commit)
         for _ in range(ahead):
-            to_cherrypick.insert(0, next.id)
-            assert len(next.parents) == 1, "Multi-parent commits are not supported!"
-            next = next.parents[0]
+            to_cherrypick.insert(0, current_commit.id)
+            assert len(current_commit.parents) == 1, "Multi-parent commits are not supported!"
+            current_commit = current_commit.parents[0]
 
-        assert next.id == base, "Found incorrect rebase base!"
+        assert current_commit.id == base, "Found incorrect rebase base!"
 
         # Point the tracking branch at the remote branch
         tracking_branch.set_target(remote_tracking.target)

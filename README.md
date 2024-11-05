@@ -26,28 +26,28 @@ A tool for managing git repositories inside of Perforce depots.
 
 Creates a new submodule.
 
-> Usage: p4submodule create [OPTIONS] [CONFIG]
+> Usage: p4submodule create [OPTIONS] [PATH TO submodule.toml]
 
-`--name TEXT`: (defaults to the checkout directory name) A name used to refer to the submodule
+`--name NAME`: (defaults to the checkout directory name) A name used to refer to the submodule
 
-`--remote TEXT`: The URL for the remote repository to track
+`--remote URL`: The URL for the remote repository to track
 
-`--tracking TEXT`: The branch to track from the remote
+`--tracking BRANCH`: The branch to track from the remote
 
 `--path PATH`: The optional relative path from the config file to the checkout directory
 
 `--no-sync`: Create the submodule config file, but don't clone it
 
-`-c, --changelist INTEGER`: (Defaults to creating a new CL) The P4 changelist to place changes in
+`-c, --changelist CHANGELIST`: (Defaults to creating a new CL) The P4 changelist to place changes in
 
 
 ### update
 
 Fetch & update submodules in config to the latest revision of their tracking branches.
 
-> Usage: p4submodule update [OPTIONS] [CONFIG]
+> Usage: p4submodule update [OPTIONS] [PATH TO submodule.toml]
 
 `-m, --message TEXT`: The commit message to use when converting local changes to the target repository type
 
-`-c, --changelist INTEGER`: (Defaults to creating a new CL) The P4 changelist to place changes in
+`-c, --changelist CHANGELIST`: (Defaults to creating a new CL) The P4 changelist to place changes in
 

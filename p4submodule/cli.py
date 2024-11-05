@@ -37,9 +37,10 @@ def config_argument(*param_decls: str):
         type=ConfigFileParamType(),
         required=False,
         default='.',
+        metavar="[PATH TO submodule.toml]",
     )
 
-changelist_option = click.option('-c', '--changelist', type=int, help="(Defaults to creating a new CL) The P4 changelist to place changes in")
+changelist_option = click.option('-c', '--changelist', type=int, metavar="CHANGELIST", help="(Defaults to creating a new CL) The P4 changelist to place changes in")
 
 @click.group()
 @click.pass_context
@@ -68,9 +69,9 @@ def dump_config(config: ConfigFile):
 
 @main.command()
 @config_argument('config')
-@click.option('--name', type=str, help="(defaults to the checkout directory name) A name used to refer to the submodule", show_default=False)
-@click.option('--remote', type=str, prompt=True, help="The URL for the remote repository to track")
-@click.option('--tracking', type=str, help="The branch to track from the remote")
+@click.option('--name', type=str, metavar="NAME", help="(defaults to the checkout directory name) A name used to refer to the submodule", show_default=False)
+@click.option('--remote', type=str, prompt=True, metavar="URL", help="The URL for the remote repository to track")
+@click.option('--tracking', type=str, metavar="BRANCH", help="The branch to track from the remote")
 @click.option('--path', type=Path, help="The optional relative path from the config file to the checkout directory")
 @click.option('--no-sync', type=bool, is_flag=True, help="Create the submodule config file, but don't clone it")
 @changelist_option

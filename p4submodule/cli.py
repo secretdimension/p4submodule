@@ -39,6 +39,8 @@ def config_argument(*param_decls: str):
         default='.',
     )
 
+changelist_option = click.option('-c', '--changelist', type=int, help="(Defaults to creating a new CL) The P4 changelist to place changes in")
+
 @click.group()
 @click.pass_context
 @click.option('--p4-port', type=str, help="P4 server address to use intead of inferring from `p4 set`")
@@ -71,7 +73,8 @@ def dump_config(config: ConfigFile):
 @click.option('--tracking', type=str, help="The branch to track from the remote")
 @click.option('--path', type=Path, help="The optional relative path from the config file to the checkout directory")
 @click.option('--no-sync', type=bool, is_flag=True, help="Create the submodule config file, but don't clone it")
-def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optional[str], path: Optional[Path], no_sync: bool):
+@changelist_option
+def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optional[str], path: Optional[Path], no_sync: bool, changelist: Optional[int]):
     """Creates a new submodule."""
 
     new = config.add_submodule(name, path, name is None)
@@ -86,8 +89,20 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
     elif no_sync:
         raise click.UsageError('When --no-sync is passed, --tracking is required!')
 
+    if changelist:
+        change_number = changelist
+    else:
+        change = config.p4.fetch_change()
+        change._description = f"""
+        Creating {new.name} submodule in {new.depot_path}
+
+        url: {remote}
+        tracking: {tracking}
+        """
+        change_number = config.p4.save_change(change)
+
     if not no_sync:
-        _, change_number = new.clone()
+        _ = new.clone(change_number)
 
     config.save(change_number)
 
@@ -96,14 +111,18 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
 @main.command()
 @config_argument('config')
 @click.option('-m', '--message', type=str, help="The commit message to use when converting local changes to the target repository type")
-def update(config: ConfigFile, message: Optional[str]):
+@changelist_option
+def update(config: ConfigFile, message: Optional[str], changelist: Optional[int]):
     """Fetch & update submodules in config to the latest revision of their tracking branches."""
 
-    change = config.p4.fetch_change()
-    change._description = f"""
-    Update submodule{'s' if len(config.submodules) > 1 else ''} in {config.directory_depot}
-    """
-    change_number = config.p4.save_change(change)
+    if changelist:
+        change_number = changelist
+    else:
+        change = config.p4.fetch_change()
+        change._description = f"""
+        Update submodule{'s' if len(config.submodules) > 1 else ''} in {config.directory_depot}
+        """
+        change_number = config.p4.save_change(change)
 
     any_updates = False
     for module in config.submodules:
@@ -113,6 +132,6 @@ def update(config: ConfigFile, message: Optional[str]):
         config.save(change_number)
         print(f"Updated submodules in {config.directory} in CL {change_number}")
 
-    else:
+    elif not changelist:
         config.p4.delete_change(change_number)
         print("No submodules were updated")

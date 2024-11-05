@@ -130,13 +130,17 @@ class Submodule(object):
     def ws_path(self) -> P4Path:
         return self._config.directory_ws / (self.path or '.')
 
+    @property
+    def depot_path(self) -> P4Path:
+        return self._config.directory_depot / (self.path or '.')
+
     def __repr__(self) -> str:
         return f'Submodule(name="{self.name}" path="{self.local_path}")'
 
 
     # Functionality
 
-    def clone(self) -> tuple[pygit2.Repository, int]:
+    def clone(self, change_num: int) -> pygit2.Repository:
         """Clone the submodule into the relevant directory (directory _cannot_ already exist)"""
         if self._repo:
             raise Exception("Cannot clone() submodule that is already cloned!")
@@ -159,14 +163,9 @@ class Submodule(object):
 
         self.current_ref = self._repo.head.resolve().target
 
-        change = self._config._p4.fetch_change()
-        change._description = f"""
-        Adding submodule {self.name}
-        """.strip()
-        change_num = self._config.p4.save_change(change)
         self._config._p4.run_add("-c", str(change_num), *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
 
-        return self._repo, change_num
+        return self._repo
 
 
     def update(self, change_number: int, commit_message: Optional[str] = None) -> bool:

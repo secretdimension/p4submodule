@@ -287,3 +287,5 @@ class Submodule(object):
         # Update the current_ref and save it
         self.current_ref = remote_tracking.target
 
+        return True
+

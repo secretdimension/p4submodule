@@ -38,6 +38,8 @@ Creates a new submodule.
 
 `--no-sync`: Create the submodule config file, but don't clone it
 
+`-c, --changelist INTEGER`: (Defaults to creating a new CL) The P4 changelist to place changes in
+
 
 ### update
 
@@ -46,4 +48,6 @@ Fetch & update submodules in config to the latest revision of their tracking bra
 > Usage: p4submodule update [OPTIONS] [CONFIG]
 
 `-m, --message TEXT`: The commit message to use when converting local changes to the target repository type
+
+`-c, --changelist INTEGER`: (Defaults to creating a new CL) The P4 changelist to place changes in
 

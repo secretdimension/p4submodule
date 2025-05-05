@@ -1,4 +1,5 @@
 import re
+import textwrap
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
@@ -94,12 +95,12 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
         change_number = changelist
     else:
         change = config.p4.fetch_change()
-        change._description = f"""
+        change._description = textwrap.dedent(f"""
         Creating {new.name} submodule in {new.depot_path}
 
         url: {remote}
         tracking: {tracking}
-        """
+        """)
         change_number = config.p4.save_change(change)
 
     if not no_sync:
@@ -120,9 +121,9 @@ def update(config: ConfigFile, message: Optional[str], changelist: Optional[int]
         change_number = changelist
     else:
         change = config.p4.fetch_change()
-        change._description = f"""
+        change._description = textwrap.dedent(f"""
         Update submodule{'s' if len(config.submodules) > 1 else ''} in {config.directory_depot}
-        """
+        """)
         change_number = config.p4.save_change(change)
 
     any_updates = False

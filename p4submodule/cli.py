@@ -1,3 +1,4 @@
+import glob
 import re
 import textwrap
 from pathlib import Path
@@ -111,29 +112,33 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
     print(f"Added submodule {new.name} in CL {change_number}")
 
 @main.command()
-@config_argument('config')
-@click.option('-m', '--message', type=str, help="The commit message to use when converting local changes to the target repository type")
+@click.pass_context
+@click.argument('configs', type=str, nargs=-1)
+@click.option('-m', '--message', type=str, default="[p4submodule] updating repo", help="The commit message to use when converting local changes to the target repository type")
 @changelist_option
-def update(config: ConfigFile, message: Optional[str], changelist: Optional[int]):
+def update(ctx: click.Context, configs: list[str], message: Optional[str], changelist: Optional[int]):
     """Fetch & update submodules in config to the latest revision of their tracking branches."""
+    p4 = ctx.find_object(P4Context)
 
-    if changelist:
-        change_number = changelist
-    else:
-        change = config.p4.fetch_change()
-        change._description = textwrap.dedent(f"""
-        Update submodule{'s' if len(config.submodules) > 1 else ''} in {config.directory_depot}
-        """)
-        change_number = config.p4.save_change(change)
+    for config_entry in configs:
+        if not config_entry.endswith("submodule.toml"):
+            config_entry = config_entry + "/submodule.toml"
 
-    any_updates = False
-    for module in config.submodules:
-        any_updates = any_updates or module.update(change_number=change_number, commit_message=message)
+        for config_file in glob.iglob(f"{config_entry}", recursive=True):
+            config = ConfigFile(Path(config_file), p4)
 
-    if any_updates:
-        config.save(change_number)
-        print(f"Updated submodules in {config.directory} in CL {change_number}")
+            if not changelist:
+                change = p4.fetch_change()
+                change._description = textwrap.dedent(f"""
+                Update submodule{'s' if len(config.submodules) > 1 else ''} in {config.directory_depot}
+                """)
+                change_number = p4.save_change(change)
+            else:
+                change_number = changelist
 
-    elif not changelist:
-        config.p4.delete_change(change_number)
-        print("No submodules were updated")
+            for module in config.submodules:
+                if module.update(change_number=change_number, commit_message=message):
+                    config.save(change_number)
+                    print(f"Updated submodules in {config.directory} in CL {change_number}")
+                elif not changelist:
+                    p4.delete_change(change_number)

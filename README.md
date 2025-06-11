@@ -45,9 +45,9 @@ Creates a new submodule.
 
 Fetch & update submodules in config to the latest revision of their tracking branches.
 
-> Usage: p4submodule update [OPTIONS] [PATH TO submodule.toml]
+> Usage: p4submodule update [OPTIONS] [CONFIGS]...
 
-`-m, --message TEXT`: The commit message to use when converting local changes to the target repository type
+`-m, --message TEXT` (Defaults to `[p4submodule] updating repo`): The commit message to use when converting local changes to the target repository type
 
 `-c, --changelist CHANGELIST`: (Defaults to creating a new CL) The P4 changelist to place changes in
 

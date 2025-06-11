@@ -11,7 +11,7 @@ import pygit2
 import tomlkit.api
 import tomlkit.exceptions
 from paramiko.config import SSHConfig
-from pygit2.enums import BranchType, MergeAnalysis, ResetMode
+from pygit2.enums import BranchType, DescribeStrategy, MergeAnalysis, ResetMode
 
 if TYPE_CHECKING:
     from .config_file import ConfigFile
@@ -272,13 +272,22 @@ class Submodule(object):
         # Update the working tree
         self._repo.reset(tracking_branch.target, ResetMode.HARD)
 
+        try:
+            tag = self._repo.describe(describe_strategy=DescribeStrategy.TAGS, max_candidates_tags=1)
+            self._table['current_ref'].comment(tag)
+
+        except pygit2.GitError:
+            pass
+
         for commit in to_cherrypick:
             self._repo.cherrypick(commit)
 
-        print(f"Updated {behind} commits to {tracking_branch.upstream_name} ({remote_tracking.target})")
+        print(f"Updated {behind} commits to {remote_tracking.branch_name} ({remote_tracking.target})")
 
         if to_cherrypick:
-            print(f"Files changed locally are staged in git's index (use \"git cherry-pick --continue\" to commit them)")
+            print(f"Files changed locally are staged in git's index (use \"git cherry-pick --continue\" in {self.local_path} to commit them)")
+
+        self._config.p4.run_revert('-c', str(change_number), '-a')
 
         self._config.p4.run_add("-c", str(change_number), *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
 

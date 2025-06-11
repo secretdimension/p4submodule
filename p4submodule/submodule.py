@@ -278,7 +278,9 @@ class Submodule(object):
         print(f"Updated {behind} commits to {tracking_branch.upstream_name} ({remote_tracking.target})")
 
         if to_cherrypick:
-            print(f"Files changed locally are staged in git's index (use \"git cherry-pick --continue\" to commit them)")
+            print(f"Files changed locally are staged in git's index (use \"git cherry-pick --continue\" in {self.local_path} to commit them)")
+
+        self._config.p4.run_revert('-c', str(change_number), '-a')
 
         self._config.p4.run_add("-c", str(change_number), *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
 

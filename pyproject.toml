@@ -8,6 +8,7 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.11"
+dynamic = [ "classifiers" ]
 
 dependencies = [
     "p4python (>=2024.2.2682690)",
@@ -16,6 +17,14 @@ dependencies = [
     "tomlkit (>=0.13.2)",
     "paramiko (>=3.5.0)",
     "msgspec (==0.19.0)",
+]
+
+[tool.poetry]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Version Control",
+    "Topic :: Software Development :: Version Control :: Git",
 ]
 
 [tool.poetry.group.dev.dependencies]

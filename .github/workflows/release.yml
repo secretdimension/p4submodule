@@ -1,0 +1,64 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      rule:
+        description: The type of version bump to perform
+        required: true
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - premajor
+          - preminor
+          - prepatch
+          - prerelease
+          - prerelease
+          - prerelease
+      next-phase:
+        description: Increment the phase of the current version
+        required: false
+        type: boolean
+
+env:
+  REPOSITORY_NAME: pypi
+  REPOSITORY_URL: https://test.pypi.org/legacy/
+
+jobs:
+  publish-release:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: pipx install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "poetry"
+
+      - name: Poetry Install
+        run: poetry install --with dev --no-interaction
+
+      - name: Poetry Version
+        id: version
+        run: echo version=$(poetry version -s ${{ inputs.rule }} ${{ (inputs.rule == 'prerelease' && inputs.next-phase) && '--next-phase' || '' }}) >> $GITHUB_OUTPUT
+
+      - name: Commit Changes
+        uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          commit_message: "Update version to v${{ steps.version.outputs.version }}"
+          tagging_message: v${{ steps.version.outputs.version }}
+          file_pattern: "pyproject.toml"
+
+      - name: Publish to PyPI
+        run: |
+          poetry config repositories.${{ env.REPOSITORY_NAME }} ${{ env.REPOSITORY_URL }}
+          poetry config pypi-token.${{ env.REPOSITORY_NAME }} ${{ secrets.PYPI_TOKEN }}
+          poetry publish --build --skip-existing --repository ${{ env.REPOSITORY_NAME }}

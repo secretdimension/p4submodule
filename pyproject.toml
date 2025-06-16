@@ -22,7 +22,7 @@ dependencies = [
 types-paramiko = "^3.5.0.20240928"
 types-pygit2 = "^1.15.0.20240822"
 pytype = "^2024.10.11"
-jinja2 = "^3.1.4"
+jinja2 = "^3.1.6"
 types-jinja2 = "^2.11.9"
 
 [project.scripts]

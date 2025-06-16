@@ -6,13 +6,14 @@ DO NOTE EDIT README.MD! Edit README.md.in instead.
 
 A tool for managing git repositories inside of Perforce depots.
 
+This tool was built for managing Unreal Engine plugins that are distributed via GitHub, but it may have other uses as well.
 
 ## CLI Documentation
 {% for command in commands if not command.command.hidden %}
 
 ### {{ command.info_name }}
 
-{{ command.command.help if command.command.help }}
+{{ command.command.help|dedent|trim if command.command.help }}
 
 > {{ command.get_usage() }}
 {% for param in command.command.params %}
@@ -24,3 +25,34 @@ A tool for managing git repositories inside of Perforce depots.
 {% endfor %}
 
 {% endfor %}
+
+## `submodule.toml` Format
+
+Editing this file by hand should _not_ be required, as all modifications should be covered by the above commands.
+
+### `submodule.[NAME]` sections (optional) (NAME default: file directory name)
+
+You may use this section to optionally define multiple submodules in the same file.
+Example:
+```toml
+[Submodule.ModuleA]
+...
+[Submodule.ModuleB]
+...
+```
+
+### `path` (optional) (default: file directory)
+
+You may use this field to specify the path to the git repository checkout root.
+
+### `remote`
+
+The path to the git remote to checkout/clone from.
+
+### `tracking`
+
+The remote branch to track when updating.
+
+### `current_ref`
+
+The OID of the git commit currently in use by the submodule.

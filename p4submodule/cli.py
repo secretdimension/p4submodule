@@ -101,7 +101,7 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
 
         url: {remote}
         tracking: {tracking}
-        """)
+        """).strip()
         change_number = config.p4.save_change(change)
 
     if not no_sync:
@@ -131,7 +131,7 @@ def update(ctx: click.Context, configs: list[str], message: Optional[str], chang
                 change = p4.fetch_change()
                 change._description = textwrap.dedent(f"""
                 Update submodule{'s' if len(config.submodules) > 1 else ''} in {config.directory_depot}
-                """)
+                """).strip()
                 change_number = p4.save_change(change)
             else:
                 change_number = changelist

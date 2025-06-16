@@ -6,6 +6,7 @@ DO NOTE EDIT README.MD! Edit README.md.in instead.
 
 A tool for managing git repositories inside of Perforce depots.
 
+This tool was built for managing Unreal Engine plugins that are distributed via GitHub, but it may have other uses as well.
 
 ## CLI Documentation
 
@@ -45,9 +46,43 @@ Creates a new submodule.
 
 Fetch & update submodules in config to the latest revision of their tracking branches.
 
+This command will do it's best to preserve your local/p4 changes to directories by commiting them to the local git repository,
+fetching the remote, and rebasing your change on top of the newest tracking version, but it is possible that conflicts may arise.
+
 > Usage: p4submodule update [OPTIONS] [CONFIGS]...
 
 `-m, --message TEXT` (Defaults to `[p4submodule] updating repo`): The commit message to use when converting local changes to the target repository type
 
 `-c, --changelist CHANGELIST`: (Defaults to creating a new CL) The P4 changelist to place changes in
 
+
+## `submodule.toml` Format
+
+Editing this file by hand should _not_ be required, as all modifications should be covered by the above commands.
+
+### `submodule.[NAME]` sections (optional) (NAME default: file directory name)
+
+You may use this section to optionally define multiple submodules in the same file.
+Example:
+```toml
+[Submodule.ModuleA]
+...
+[Submodule.ModuleB]
+...
+```
+
+### `path` (optional) (default: file directory)
+
+You may use this field to specify the path to the git repository checkout root.
+
+### `remote`
+
+The path to the git remote to checkout/clone from.
+
+### `tracking`
+
+The remote branch to track when updating.
+
+### `current_ref`
+
+The OID of the git commit currently in use by the submodule.

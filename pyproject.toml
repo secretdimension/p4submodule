@@ -34,3 +34,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytype]
 inputs = ['.']
+
+[tool.poetry.requires-plugins]
+poethepoet = { version = "~0.35.0", extras = ["poetry_plugin"]}
+
+[tool.poe.tasks]
+genreadme.shell = "python scripts/genreadme.py --module p4submodule.cli --template ./README.md.in --out README.md"

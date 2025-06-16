@@ -51,7 +51,7 @@ jobs:
         run: poetry install --with dev --no-interaction
 
       - name: Generate Readme
-        run: poetry run python scripts/genreadme.py --module p4submodule.cli --template ./README.md.in --out README.md
+        run: poetry poe genreadme
 
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v6

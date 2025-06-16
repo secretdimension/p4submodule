@@ -117,7 +117,12 @@ def create(config: ConfigFile, name: Optional[str], remote: str, tracking: Optio
 @click.option('-m', '--message', type=str, default="[p4submodule] updating repo", help="The commit message to use when converting local changes to the target repository type")
 @changelist_option
 def update(ctx: click.Context, configs: list[str], message: Optional[str], changelist: Optional[int]):
-    """Fetch & update submodules in config to the latest revision of their tracking branches."""
+    """
+    Fetch & update submodules in config to the latest revision of their tracking branches.
+
+    This command will do it's best to preserve your local/p4 changes to directories by commiting them to the local git repository,
+    fetching the remote, and rebasing your change on top of the newest tracking version, but it is possible that conflicts may arise.
+    """
     p4 = ctx.find_object(P4Context)
 
     for config_entry in configs:

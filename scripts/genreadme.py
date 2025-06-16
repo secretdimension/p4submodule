@@ -1,4 +1,5 @@
 import os
+import textwrap
 from importlib import import_module
 from pathlib import Path
 from typing import Optional
@@ -27,6 +28,10 @@ def _generate_readme(template_path: Path, out_path: Path, commands: list[click.C
         trim_blocks=True,
         lstrip_blocks=True,
     )
+
+    jinja.filters.update({
+        "dedent": textwrap.dedent,
+    })
 
     template = jinja.get_template(str(template_path))
 

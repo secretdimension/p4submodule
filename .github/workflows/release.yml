@@ -24,7 +24,6 @@ on:
 
 env:
   REPOSITORY_NAME: pypi
-  REPOSITORY_URL: https://test.pypi.org/legacy/
 
 jobs:
   publish-release:
@@ -59,6 +58,5 @@ jobs:
 
       - name: Publish to PyPI
         run: |
-          poetry config repositories.${{ env.REPOSITORY_NAME }} ${{ env.REPOSITORY_URL }}
-          poetry config pypi-token.${{ env.REPOSITORY_NAME }} ${{ secrets.PYPI_TOKEN }}
-          poetry publish --build --skip-existing --repository ${{ env.REPOSITORY_NAME }}
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry publish --build --skip-existing

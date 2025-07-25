@@ -1,6 +1,6 @@
 [project]
 name = "p4submodule"
-version = "1.0.0"
+version = "1.0.1"
 description = "A tool for managing git repositories inside of Perforce depots"
 authors = [
     { name = "Colden Cullen", email = "<ccullen@secretdimension.com>" },

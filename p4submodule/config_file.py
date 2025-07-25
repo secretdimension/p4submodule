@@ -109,4 +109,3 @@ class ConfigFile(TOMLFile):
 
         if self._is_new:
             self.p4.run_add(*p4_args)
-

@@ -8,7 +8,7 @@ import click
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 def _generate_commands(name: str, root_command: click.Command) -> list[click.Context]:
-    results: list[click.Context] = list()
+    results: list[click.Context] = []
 
     def _recurse(name: str, child: click.Command, parent: Optional[click.Context]) -> None:
         ctx = click.Context(child, parent=parent, info_name=name)

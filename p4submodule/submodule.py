@@ -295,4 +295,3 @@ class Submodule(object):
         self.current_ref = remote_tracking.target
 
         return True
-

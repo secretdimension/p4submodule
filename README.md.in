@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: © 2025 Secret Dimension, Inc. <info@secretdimension.com>. All Rights Reserved.
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 <!---
 DO NOTE EDIT README.MD! Edit README.md.in instead.
 -->

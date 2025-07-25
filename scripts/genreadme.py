@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2025 Secret Dimension, Inc. <info@secretdimension.com>. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 import textwrap
 from importlib import import_module

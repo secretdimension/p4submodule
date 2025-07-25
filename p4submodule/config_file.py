@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: © 2025 Secret Dimension, Inc. <info@secretdimension.com>. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import tomlkit.api
 from pathlib import Path
 from tomlkit.toml_document import TOMLDocument

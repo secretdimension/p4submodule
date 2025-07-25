@@ -8,6 +8,12 @@ A tool for managing git repositories inside of Perforce depots.
 
 This tool was built for managing Unreal Engine plugins that are distributed via GitHub, but it may have other uses as well.
 
+## Installation
+
+1. Ensure you have python3 & [pipx](https://github.com/pypa/pipx) installed
+2. Run `pipx install p4submodule`
+3. Tada!
+
 ## CLI Documentation
 {% for command in commands if not command.command.hidden %}
 

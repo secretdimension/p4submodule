@@ -57,6 +57,12 @@ jobs:
       - name: Generate Readme
         run: poetry poe genreadme
 
+        # Ensure README.md will pass pre-commit checks
+      - uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --files README.me end-of-file-fixer
+        continue-on-error: true
+
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v6
         with:

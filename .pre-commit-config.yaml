@@ -11,6 +11,11 @@ default_install_hook_types:
   - post-checkout
   - post-merge
 
+ci:
+  skip:
+    # This doesn't work on pre-commit.ci
+    - poetry-lock
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

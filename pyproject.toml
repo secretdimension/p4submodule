@@ -15,18 +15,14 @@ requires-python = ">=3.11"
 dynamic = [ "classifiers" ]
 
 dependencies = [
-    "p4python (>=2024.2.2682690)",
-    "pygit2 (>=1.18)",
-    "click (>=8.1.8)",
-    "tomlkit (>=0.13.2)",
-    "paramiko (>=3.5.0)",
+    "p4python (==2025.1.2767466)",
+    "pygit2 (==1.18.1)",
+    "click (==8.2.1)",
+    "tomlkit (==0.13.3)",
+    "paramiko (==4.0.0)",
     "msgspec (==0.19.0)",
 ]
 
-[project.urls]
-repository = "https://github.com/secretdimension/p4submodule"
-
-[tool.poetry]
 classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
@@ -34,12 +30,14 @@ classifiers = [
     "Topic :: Software Development :: Version Control :: Git",
 ]
 
+[project.urls]
+repository = "https://github.com/secretdimension/p4submodule"
+
 [tool.poetry.group.dev.dependencies]
-types-paramiko = "^3.5.0.20250708"
-types-pygit2 = "^1.15.0.20240822"
-pytype = "^2024.10.11"
-jinja2 = "^3.1.4"
-types-jinja2 = "^2.11.9"
+types-paramiko = "4.0.0.20250809"
+types-pygit2 = "1.15.0.20240822"
+pytype = "2024.10.11"
+jinja2 = "3.1.6"
 
 [project.scripts]
 p4submodule = "p4submodule.cli:main"
@@ -52,7 +50,7 @@ build-backend = "poetry.core.masonry.api"
 inputs = ['.']
 
 [tool.poetry.requires-plugins]
-poethepoet = { version = "~0.35.0", extras = ["poetry_plugin"]}
+poethepoet = { version = "==0.36.0", extras = ["poetry_plugin"]}
 
 [tool.poe.tasks]
 genreadme.shell = "python scripts/genreadme.py --module p4submodule.cli --template ./README.md.in --out README.md"

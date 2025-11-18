@@ -20,6 +20,15 @@ This tool was built for managing Unreal Engine plugins that are distributed via 
 2. Run `pipx install p4submodule`
 3. Tada!
 
+## LFS Repositories
+
+If the repository you're cloning or updating uses git LFS, you'll need to run some additional commands immediately after a `create` or `update`.
+
+1. `git lfs fetch`: Caches the LFS data on your local machine.
+2. 'git lfs checkout`: Replaces the contents of the files with the cached LFS data.
+
+Note: If you do not have git LFS installed on your local machine, run `git lfs install` first.
+
 ## CLI Documentation
 {% for command in commands if not command.command.hidden %}
 

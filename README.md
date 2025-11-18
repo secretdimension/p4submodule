@@ -53,7 +53,7 @@ Creates a new submodule.
 
 `-c, --changelist CHANGELIST`: (Defaults to creating a new CL) The P4 changelist to place changes in
 
-## LFS Repositories
+#### LFS Repositories
 
 If you are cloning an LFS repository, after the initial Create command, you'll need to run:
 

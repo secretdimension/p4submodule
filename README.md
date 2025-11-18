@@ -53,16 +53,6 @@ Creates a new submodule.
 
 `-c, --changelist CHANGELIST`: (Defaults to creating a new CL) The P4 changelist to place changes in
 
-#### LFS Repositories
-
-If you are cloning an LFS repository, after the initial Create command, you'll need to run:
-
-`git lfs fetch`: Caches the LFS data on your local machine
-
-`git lfs checkout`: Swaps out the metadata in the files with their actual contents
-
-Note: If you do not have git LFS installed on your system, you'll need to run `git lfs install`.
-
 
 ### update
 

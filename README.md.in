@@ -25,7 +25,7 @@ This tool was built for managing Unreal Engine plugins that are distributed via 
 If the repository you're cloning or updating uses git LFS, you'll need to run some additional commands immediately after a `create` or `update`.
 
 1. `git lfs fetch`: Caches the LFS data on your local machine.
-2. 'git lfs checkout`: Replaces the contents of the files with the cached LFS data.
+2. `git lfs checkout`: Replaces the contents of the files with the cached LFS data.
 
 Note: If you do not have git LFS installed on your local machine, run `git lfs install` first.
 

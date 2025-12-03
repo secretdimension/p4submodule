@@ -41,7 +41,7 @@ class P4Context(P4.P4):
 
         client = self.run_client('-o', self.client)[0]
 
-        if client['Host'] != socket.gethostname():
+        if client.get('Host') not in [None, socket.gethostname()]:
             raise Exception(f"Client {self.client} has a Host of {client['Host']}, but curret hostname is {socket.gethostname()}")
 
         return Path(client['Root'])

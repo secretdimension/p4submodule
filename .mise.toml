@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: © 2025 Secret Dimension, Inc. <info@secretdimension.com>. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[tools]
+python = "3.13.10"
+poetry = { version = "2.2.1", pyproject = "{{ config_root }}/pyproject.toml" }
+
+[env]
+MISE_POETRY_AUTO_INSTALL = true
+MISE_POETRY_VENV_AUTO = true

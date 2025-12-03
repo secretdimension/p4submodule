@@ -142,6 +142,10 @@ class Submodule(object):
         return f'Submodule(name="{self.name}" path="{self.local_path}")'
 
 
+    def _p4_add_index(self, change_num: int) -> None:
+        self._config._p4.run_add("-c", str(change_num), "-I", *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
+
+
     # Functionality
 
     def clone(self, change_num: int) -> pygit2.Repository:
@@ -167,7 +171,7 @@ class Submodule(object):
 
         self.current_ref = self._repo.head.resolve().target
 
-        self._config._p4.run_add("-c", str(change_num), *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
+        self._p4_add_index(change_num)
 
         return self._repo
 
@@ -293,7 +297,7 @@ class Submodule(object):
 
         self._config.p4.run_revert('-c', str(change_number), '-a')
 
-        self._config.p4.run_add("-c", str(change_number), *[(self.ws_path / e.path).as_posix() for e in self._repo.index])
+        self._p4_add_index(change_number)
 
         # Update the current_ref and save it
         self.current_ref = remote_tracking.target

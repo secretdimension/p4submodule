@@ -617,7 +617,7 @@ files = [
 bcrypt = ">=3.2"
 cryptography = ">=3.3"
 invoke = ">=2.0"
-pynacl = ">=1.5"
+pynacl = ">=1.6.2"
 
 [package.extras]
 gssapi = ["gssapi (>=1.4.1) ; platform_system != \"Windows\"", "pyasn1 (>=0.1.7)", "pywin32 (>=2.1.8) ; platform_system == \"Windows\""]

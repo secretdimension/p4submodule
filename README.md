@@ -70,8 +70,6 @@ Fetch & update submodules in config to the latest revision of their tracking bra
 This command will do it's best to preserve your local/p4 changes to directories by commiting them to the local git repository,
 fetching the remote, and rebasing your change on top of the newest tracking version, but it is possible that conflicts may arise.
 
-If no config is specified, p4submodule will search the working directory for the default `submodule.toml` file.
-
 > Usage: p4submodule update [OPTIONS] [CONFIGS]...
 
 `-m, --message TEXT` (Defaults to `[p4submodule] updating repo`): The commit message to use when converting local changes to the target repository type

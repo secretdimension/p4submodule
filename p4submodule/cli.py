@@ -126,6 +126,8 @@ def update(ctx: click.Context, configs: list[str], message: Optional[str], chang
 
     This command will do it's best to preserve your local/p4 changes to directories by commiting them to the local git repository,
     fetching the remote, and rebasing your change on top of the newest tracking version, but it is possible that conflicts may arise.
+
+    If no config is specified, p4submodule will search the working directory for the default `submodule.toml` file.
     """
     p4 = ctx.find_object(P4Context)
 

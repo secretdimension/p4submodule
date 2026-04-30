@@ -129,7 +129,16 @@ def update(ctx: click.Context, configs: list[str], message: Optional[str], chang
     """
     p4 = ctx.find_object(P4Context)
 
+    configs_list = []
+
     for config_entry in configs:
+        configs_list.append(config_entry)
+
+    #If no config file has been specified, look for the default file
+    if not configs_list:
+        configs_list.append("submodule.toml")
+
+    for config_entry in configs_list:
         if not config_entry.endswith("submodule.toml"):
             config_entry = config_entry + "/submodule.toml"
 

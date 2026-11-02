@@ -38,13 +38,13 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/python-poetry/poetry
-    rev: "2.2.1"
+    rev: "2.5.1"
     hooks:
       - id: poetry-check
       - id: poetry-lock
       - id: poetry-install
 
   - repo: https://github.com/fsfe/reuse-tool
-    rev: v6.2.0
+    rev: v6.3.0
     hooks:
       - id: reuse-lint-file
